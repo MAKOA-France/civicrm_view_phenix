@@ -1,0 +1,4 @@
+civicrm_view_phenix:
+  version: 1.0
+  js:
+    js/script.js: {}

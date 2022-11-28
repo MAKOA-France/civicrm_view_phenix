@@ -1,0 +1,536 @@
+<?php
+
+use Drupal\views\Views;
+use Drupal\webprofiler\Views\ViewExecutableFactoryWrapper;
+use GuzzleHttp\Psr7\Request;
+
+
+
+function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
+
+  $view = $variables['view'];
+  $field = $variables['field'];
+  $row = $variables['row'];
+  $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
+  //Label SE alter phone display
+  $white_list_view_display = ['page_10_grue_tour' , 'page_11_labelse', 'page_7_reparation', 'page_1', 'page_2', 'liste_carte'];
+  if ($view->storage->id() == 'location_occasion_membres_associes_' &&  in_array($view->current_display,  $white_list_view_display)) {
+    if ($field->field == 'phone_numeric') {
+      $value = $field->getValue($row);
+      $formatted = implode(' ',str_split($value, 2));
+      $variables['output'] = $formatted;
+    }
+  }
+
+  if ($view->storage->id() == 'fiche' &&
+  $view->current_display == 'page_2') {
+  if ($field->field == 'url') {
+    $variables['output'] = 'News output';
+
+    $company_id = $view->result[0]->id;
+
+  /*   $indiviualContactFonctions = \Civi\Api4\CustomValue::get('indiviual_contact_fonction', FALSE)
+    ->addSelect('entity_id')
+    ->addWhere('entreprise', '=',  $company_id )
+    ->execute();
+ */
+    $database = \Drupal::database();
+    $query = $database->query('select * from civicrm_value_phx_Individual_contact_fonction where contact_fonction_entreprise = ' . $company_id);
+    $indiviualContactFonctions = $query->fetch();
+    if ($indiviualContactFonctions) {
+
+      $dirigeant_id = $indiviualContactFonctions->entity_id;
+
+       $contacts_name = \Civi\Api4\Contact::get()
+      ->addSelect('display_name')
+      ->addWhere('id', '=', $dirigeant_id)
+      ->execute()->first()['display_name'];
+
+      //Site web & dirigeant
+      $value = $field->getValue($row);
+
+      //load map view
+      $view = views_embed_view('entreprise_localisation', 'block_5');
+      $view_rendered = \Drupal::service('renderer')->render($view);
+
+      $value = $value ? '<strong class="views-label views-label-url title-fiche">Site web : </strong>
+      <p class="field-content content-fiche"><a target="_blank" href="' . $value . '"> ' . $value . ' </a></p>' : '';
+
+      $markup = [
+        '#type' => 'inline_template',
+        '#template' => '{{ yourvar }} {{ yourhtml | raw }}',
+        '#context' => [
+          'yourhtml' =>  '
+
+          <div class="views-field views-field-url d-flex">
+          ' . $value . '
+          </div>
+
+          <div class="views-field views-field-url d-flex">
+          <strong class="views-label views-label-url title-fiche">Dirigeant : </strong>
+          <p class="field-content content-fiche">' . $contacts_name . '</p>
+          </div>' . $view_rendered,
+        ],
+      ];
+      $variables['output'] = $markup;
+
+    }
+  }
+// dump($field->field);
+
+  //condition for city field
+   if ($field->field == 'city') {
+      $value = $field->getValue($row);
+      $variables['output'] = ['#markup' => '<span class="content-fiche">' . $value . ' &nbsp;'];
+
+    }
+
+   //condition for street address field
+  if ($field->field == 'street_address') {
+    $value = $field->getValue($row);
+    $variables['output'] = ['#markup' => ' <span class="content-fiche">' . $value . ' &nbsp;</span><br>'];
+
+  }
+
+   //condition for country field
+  if ($field->field == 'country_id') {
+    $value = $field->getValue($row);
+    if ($value == '1076') {//this means that if the country is 'France' we hide it
+      $variables['output'] = ['#markup' => ' '];
+    }
+  }
+
+
+  //condition for postal code field
+  if ($field->field == 'postal_code') {
+    $value = $field->getValue($row);
+    $variables['output'] = ['#markup' => '<br><span class="content-fiche">' . $value . ' &nbsp;</span>'];
+
+  }
+
+  $custom_service->alterViewFieldRender ('supplemental_address_1');
+  $custom_service->alterViewFieldRender ('supplemental_address_2');
+  $custom_service->alterViewFieldRender ('supplemental_address_3');
+
+  }
+}
+
+
+/**
+ * Implements hook_views_query_alter().
+ */
+function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $view, \Drupal\views\Plugin\views\query\QueryPluginBase $query) {
+  $request = Drupal::request();
+
+  //Filtre by "nom de la marque"
+  if ($view->storage->get('id') == 'location_occasion_membres_associes_' && $view->current_display == 'page_2') {
+
+  }
+
+  $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
+  if ($view->storage->get('id') == 'location_occasion_membres_associes_' && $view->current_display == 'liste_carte') {
+    $get_query = $request->query;
+    if (!empty($get_query->get('filter_by_deprtmt'))) {
+      $departmentId = $get_query->get('filter_by_deprtmt');
+      $departments = \Drupal::database()->query("SELECT adr.postal_code  FROM civicrm_address as adr LEFT JOIN civicrm_contact as c on c.id = adr.contact_id WHERE
+      c.contact_type = 'Organization' and
+    adr.postal_code LIKE '". $departmentId . "%'");
+      $departments = $departments->fetchAll();
+       $query->where[] =  array(
+            'conditions' => array(
+            array(
+                'field' => 'contact_id_civicrm_contact.postal_code',
+                'value' => ''. trim($departmentId) .'%',
+                'operator' => 'LIKE',
+              ),
+            ),
+            'type' => 'AND',
+          );
+    }
+
+  }
+
+
+  if ($view->storage->get('id') == 'location_occasion_membres_associes_') {
+
+      $latitude = $view->exposed_data['geo_code_1'];
+      $longitude = $view->exposed_data['geo_code_2'];
+      \Drupal::service('page_cache_kill_switch')->trigger();
+
+      $req_get = \Drupal::request()->query;
+      if ($req_get) {
+        $nick_name = $request->query->get('organization_name');
+        $letter_alphabet = $request->query->get('letter');
+
+        if ($letter_alphabet !== false) {
+          if ($letter_alphabet == "0-9") {
+            foreach (range('A', 'Z') as $custom_letter) {
+              $custom_service->addWhereQuery ($query,  $custom_letter . '%', 'civicrm_contact', 'organization_name', 'not like');
+            }
+          }else {
+            $custom_service->addWhereQuery ($query,  $letter_alphabet . '%', 'civicrm_contact', 'organization_name', 'like');
+          }
+        }
+
+        //Sigle
+         if (Drupal::request()->query->get('organization_name')) {
+
+          //query behind
+          $database = \Drupal::database();
+          $organisation_name = $request->query->get('organization_name');
+          $query_get_acronym = $database->query("SELECT nick_name FROM civicrm_contact where nick_name = '" . $organisation_name . "'")->fetchAll();
+
+          if (!empty($query_get_acronym) && !is_numeric($query_get_acronym[0]->nick_name)) {
+            $query->where[] =  array(
+                  'conditions' => array(
+                  array(
+                      'field' => 'civicrm_contact.nick_name',
+                      'value' =>  $organisation_name,
+                      'operator' => '=',
+                    ),
+                  ),
+                  'type' => 'AND',
+                );
+          }else {
+                $query->where[] =  array(
+              'conditions' => array(
+                array(
+                  'field' => 'civicrm_contact.organization_name',
+                  'value' => '%'. $organisation_name .'%',
+                  'operator' => 'LIKE',
+                ),
+              ),
+              'type' => 'AND',
+            );
+          }
+         }
+    }
+
+    //Filter table list in geographic page
+    if ($view->current_display  == 'geographique') {
+      if($req_get && $req_get->get('departement')) {
+          $custom_service->addWhereQuery ($query, $req_get->get('departement') . '%', 'contact_id_civicrm_contact', 'postal_code', 'LIKE');
+      }
+    }
+  }
+
+  //Company sheet only display the marker concerned (fiche entreprise)
+   if (($view->storage->get('id') == 'entreprise_localisation') &&  ($view->current_display == 'block_5')) {
+    $current_id = \Drupal::request()->get('arg_0');
+    $latitude = civicrm_api4('Address', 'get', [
+      'select' => [
+        'geo_code_1',
+      ],
+      'where' => [
+        ['contact_id', '=', trim($current_id)],
+      ],
+    ]);
+    $longitude = civicrm_api4('Address', 'get', [
+      'select' => [
+        'geo_code_2',
+      ],
+      'where' => [
+        ['contact_id', '=', trim($current_id)],
+      ],
+    ]);
+
+
+    //filter by company name latitude
+    if ($latitude && $latitude->first()) {
+      \Drupal::service('civicrm_view_phenix.view_services')->addWhereQuery ($query, $latitude->first()['geo_code_1'], 'civicrm_address', 'geo_code_1', '=');
+    }
+
+    //filter by company name longitude
+    if ($longitude && $longitude->first()) {
+      \Drupal::service('civicrm_view_phenix.view_services')->addWhereQuery ($query, $longitude->first()['geo_code_2'], 'civicrm_address', 'geo_code_2', '=');
+    }
+
+
+  }
+
+  //todo carte current idsplay
+  if (($view->storage->get('id') == 'entreprise_localisation') &&  ($view->current_display == 'page_2')) {
+
+    if($request && $request->get('organization_name')) {
+      $org_name = $request->get('organization_name');
+      $get_id_by_nick_name = \Drupal::database()->query("SELECT id FROM civicrm_contact WHERE organization_name LIKE '%". $org_name ."%' ");
+      $get_id_by_nick_name = $get_id_by_nick_name->fetch() ? $get_id_by_nick_name->fetch()->id : '';
+
+      //Now get latitude by contact_id
+      $latitude = civicrm_api4('Address', 'get', [
+        'select' => [
+          'geo_code_1',
+        ],
+        'where' => [
+          ['contact_id', '=', $get_id_by_nick_name],
+        ],
+      ]);
+      \Drupal::service('civicrm_view_phenix.view_services')->addWhereQuery ($query, $latitude->first()['geo_code_1'], 'civicrm_address', 'geo_code_1', '=');
+      //$custom_service->addWhereQuery ($query, '%cgl%', 'civicrm_contact_civicrm_address', 'nick_name', 'LIKE');
+
+
+    }
+  }
+}
+
+function custom_query_condition ($query, $longitude, $field) {
+  $query->where[1]['conditions'][] = [
+      'field' => 'civicrm_address.' . $field,
+      'value' =>  $longitude,
+      'operator' => '=',
+    ];
+}
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function civicrm_view_phenix_preprocess_page(&$variables)
+{
+  $variables['#attached']['library'][] = 'civicrm_view_phenix/civicrm_view_phenix';
+
+}
+
+
+
+ function civicrm_view_phenix_form_views_exposed_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--page-2') {
+    //do something here
+    $form['marque_nom']['#attributes']['class'][] = 'hide';
+  }
+if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--liste-carte') {
+  //filter by departement
+  $form['filter_by_dprtmt'] = [
+    '#type' => 'select',
+    '#title' => t('Filtrer par departement'),
+    '#attributes' => [
+      'class' => ['filter_by_dprtmt'],
+    // 'data-bef-auto-submit-exclude' => "1"
+    ],
+    '#options' => \Drupal::service('civicrm_view_phenix.view_services')->allDepartment(),
+    '#name' => 'filter_by_deprtmt',
+    '#weight' => 0,
+  ];
+}
+  //change input to autocomplete
+  if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--page-2') {
+    $form['marque_nom_copy'] = [
+      '#type' => 'textfield',
+      '#title' => 'Nom de la marque ',
+      '#autocomplete_route_name' => 'civicrm_view_phenix.autocomplete.name',
+      '#attributes' => ['class' => ['marque-nom-copy']]
+    ];
+
+   // $form['marque_nom']['#attributes']['class'][] = 'hidden';
+
+    $form['actions']['submit']['#attributes']['class'][] = 'custom-submit-btn hide';
+    $form['marque_nom_copy']['#suffix'] = '<a class="button filter-by-brand">Rechercher</a>';
+
+  }
+
+  $form_white_list = [
+    'views-exposed-form-location-occasion-membres-associes--page-2', 'views-exposed-form-location-occasion-membres-associes--page-1', 'views-exposed-form-location-occasion-membres-associes--liste-carte'
+   ];
+
+  if(in_array($form['#id'], $form_white_list)) {
+    $form['header']['organization_name'] = [
+      '#type' => 'textfield',
+      '#title' => t('Rechercher une entreprise'),
+      '#attributes' => [
+        'class' => ['filter_by_name'],
+        'data-bef-auto-submit-exclude' => "1"
+
+      ],
+      '#name' => 'organization_name',
+      'data-bef-auto-submit-exclude' => "1"
+    ];
+
+    $form['header']['#weight'] = -100;
+
+  }
+
+  if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--page-1') {
+    $form['materiel_location_new']['#attributes']['class'][] = 'ul-parent-materiel-location';
+    $form['materiel_location']['#attributes']['class'][] = 'ul-child-materiel-location';
+
+    $ul_parents =  $form['materiel_location_new']['#options'];
+    $ul_child =  $form['materiel_location']['#options'];
+
+    $allUl = [];
+    //create ul li with switch loop
+    foreach($ul_parents as $k => $li_parent) {
+      switch ($k){
+        case 1 : // ÉQUIPER / SÉCURISER UN SITE
+          $whiteslist = [2,63,64,60,68,69,42,46,10,39,8,47,14,16,40,21,26,62,52];
+          build_ul_to_append_in_filter_toggle($ul_child, 1, $whiteslist, $allUl);
+          break;
+        case 2 : // TRAVAILLER EN HAUTEUR / GRUTER
+          $whiteslist = [46,10,39,21,26,13,15,48,17];
+          build_ul_to_append_in_filter_toggle($ul_child, 2, $whiteslist, $allUl);
+          break;
+        case 3 : // TRAVAILLER LES SOLS
+          $whiteslist = [2,63,64,60,16,26,3,6,76,12,11,18,19,23,50,22,27,28];
+          build_ul_to_append_in_filter_toggle($ul_child, 3, $whiteslist, $allUl);
+          break;
+        case 4 :// PRODUIRE DE L’ÉNERGIE / DE L’AIR
+          $whiteslist = [68,69,8,47,1,43];
+          build_ul_to_append_in_filter_toggle($ul_child, 4, $whiteslist, $allUl);
+          break;
+        case 5 :  // CONSTRUIRE / ENTRETENIR / AMÉNAGER BÂTIMENT
+          $whiteslist = [2,63,64,60,68,69,42,10,39,14,16,40,21,26,62,5,13,15,17,20,61,22,24,43,27,29,28];
+          build_ul_to_append_in_filter_toggle($ul_child, 5, $whiteslist, $allUl);
+          break;
+        case 6 : // TRANSPORTER / MANUTENTIONNER
+          $whiteslist = [46,65,66,67,4,5,75,13,15,48,50,27,49];
+        //  build_ul_to_append_in_filter_toggle($ul_child, 6, $whiteslist, $allUl);
+          break;
+        case 7 : // ORGANISER UN ÉVÈNEMENT
+          $whiteslist = [68,69,46,8,47,14,40,21,26,62,70,77,78,79,80,17,20];
+          build_ul_to_append_in_filter_toggle($ul_child, 7, $whiteslist, $allUl);
+          break;
+        case 8 : // ENTRETENIR / AMÉNAGER LES ESPACES VERTS / AGRICOLES
+          $whiteslist = [46,26,5,72,73,74,75,76,48,20,22,28];
+          build_ul_to_append_in_filter_toggle($ul_child, 8, $whiteslist, $allUl);
+          break;
+        case 9 : // DÉMOLIR / RECYCLER
+          $whiteslist = [46,39,16,62,52,44,17,20,51,22];
+          build_ul_to_append_in_filter_toggle($ul_child, 9, $whiteslist, $allUl);
+          break;
+        case 10 : // S'ÉQUIPER EN OUTILS / ACCESSOIRES
+          $whiteslist = [16,26,71,20,25,18,50,24,43];
+          build_ul_to_append_in_filter_toggle($ul_child, 10, $whiteslist, $allUl);
+          break;
+        case 11 : // PROTÉGER L’ENVIRONNEMENT (?)
+          $whiteslist = [40,21,62,52,20,19,51,49];
+          build_ul_to_append_in_filter_toggle($ul_child, 11, $whiteslist, $allUl);
+          break;
+      }
+    }
+    $form['materiel_location_new']['#attributes']['data-all-ul'] = json_encode($allUl);
+  }
+
+}
+
+
+
+/**
+ * Implements hook_preprocess_views_view().
+ */
+function civicrm_view_phenix_preprocess_views_view(&$vars) {
+  $view = $vars["view"];
+
+  if(($view->storage->id() == 'location_occasion_membres_associes_') && ($view->current_display != 'geographique')) {
+    $req = \Drupal::request();
+   $generate_html = '<div class="a-z-block custom-bloc-a-to-z">';
+   $current_path = \Drupal::service('path.current')->getPath();
+   $current_uri = $req->getRequestUri();
+
+
+   $query = parse_url($current_uri, PHP_URL_QUERY);
+
+  if ($query) {
+    if (strpos ($query, 'letter' ) !== false) {
+
+      preg_match('/&letter=[a-zA-Z]/', $current_uri, $matches);
+
+      if (!empty($matches)) {
+        $previous_value = $matches[0];
+        $current_uri = str_replace($previous_value, '', $current_uri);
+      }
+    }
+  }
+
+
+  /* Ajouter filtre "TOUT" et chifre de 0-9   mettre aussi la total au dessus du filtre alphabetique */
+
+  //check if there is a parameters
+  $filterAllActive = '';
+  if (strpos($current_uri,'?') === false) {
+    $filterAllActive = 'filtre-tout-active';
+  }
+
+
+  $generate_html .= '<span>
+  <a data-active-letter=" " data-current-uri="/annuaire/occasion" href="' . \Drupal::request()->getpathInfo() . '" class="filter-by-letter '. $filterAllActive .'">Tout</a>
+</span>';
+
+    //Filter by number
+   $generate_html = \Drupal::service('civicrm_view_phenix.view_services')->numericFilter ($query, $generate_html);
+   $generate_html = \Drupal::service('civicrm_view_phenix.view_services')->alphabeticFilter ($query, $generate_html);
+
+   $generate_html .= '</div>';
+   $vars['header']['#markup'] = $generate_html;
+  }
+
+    //for the alphabetic menu
+    if ($view->storage->get('id') == 'publicite') {
+      $current_uri = \Drupal::request()->getRequestUri();
+      $current_path = \Drupal::service('path.current')->getPath();
+      $white_list_to_add_form_filter = ['/annuaire/geographique', '/annuaire/reparation', '/annuaire/alphabetique', '/annuaire/grues_a_tour', '/annuaire/membres-associes', '/annuaire/Label_SE'];
+      if (in_array($current_path, $white_list_to_add_form_filter)) {
+        $vars['header']['organization_name'] = [
+          '#type' => 'textfield',
+          '#title' => t('Rechercher une entreprise'),
+          '#attributes' => [
+            'class' => ['filter_by_name'],
+            'data-bef-auto-submit-exclude' => "1"
+
+          ],
+          '#name' => 'organization_name',
+          'data-bef-auto-submit-exclude' => "1"
+        ];
+      }
+
+
+    }
+
+    if ($view->storage->id() == 'location_occasion_membres_associes_' && ($view->current_display == 'liste_carte')) {
+
+  /*     $vars['header']['filter_by_address'] = [
+        '#type' => 'textfield',
+        '#title' => t('Filtrer par adresse'),
+        '#attributes' => [
+          'class' => ['filter_by_address'],
+          'data-bef-auto-submit-exclude' => "1"
+
+        ],
+        '#name' => 'filter_by_address',
+      ]; */
+
+      if (empty($view->result)) {
+        $vars['header']['submit']['#suffix'] = '<span style="padding-left: 60px">Aucun résultat pour cette recherche.</span>';
+      }
+
+      }
+
+}
+
+
+/**
+ *
+ * implement hoo_view_pre_render()
+ *
+ * @param Drupal\views\ViewExecutable $view
+ * @return void
+ */
+function civicrm_view_phenix_views_pre_render(Drupal\views\ViewExecutable  $view) {
+  if ($view->storage->id() == 'fiche' && ($view->current_display == 'page_2')) {
+    unset($view->result[1]);
+  }
+}
+
+
+/**
+ * create ul li to be appended to the filter (search by type of activity)
+ */
+function build_ul_to_append_in_filter_toggle($ul_child, $id, $whiteslist, &$allUl) {
+  $each_ul = '<ul class="toggle-sub-materiel">';
+  foreach($ul_child as $key => $li_child) {
+    if (in_array($key, $whiteslist)) {
+      $each_ul .= '<li data-val="' . $key . '"><a href="?materiel_location_new=' . $id . '&materiel_location=' . $key . '">' . $li_child . '</a></li>';
+    }
+  }
+
+  $each_ul .= '</ul>';
+  $allUl["materiel_location_new[" . $id . "]"] =  $each_ul;
+  return $allUl;
+}

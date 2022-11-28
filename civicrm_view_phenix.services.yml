@@ -1,0 +1,4 @@
+services:
+  civicrm_view_phenix.view_services:
+    class: Drupal\civicrm_view_phenix\ViewService
+    arguments: ['@current_user']

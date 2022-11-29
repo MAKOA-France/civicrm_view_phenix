@@ -51,7 +51,11 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
       //load map view
       $view = views_embed_view('entreprise_localisation', 'block_5');
-      $view_rendered = \Drupal::service('renderer')->render($view);
+      $hasLatitudeAndLongitude = $custom_service->checkIfCompanyHasLatAndLongitude($company_id);//don't display map if there is no marker
+      $view_rendered = $hasLatitudeAndLongitude ? \Drupal::service('renderer')->render($view) : '';
+
+
+
 
       $value = $value ? '<strong class="views-label views-label-url title-fiche">Site web : </strong>
       <p class="field-content content-fiche"><a target="_blank" href="' . $value . '"> ' . $value . ' </a></p>' : '';
@@ -88,7 +92,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
    //condition for street address field
   if ($field->field == 'street_address') {
     $value = $field->getValue($row);
-    $variables['output'] = ['#markup' => ' <span class="content-fiche">' . $value . ' &nbsp;</span><br>'];
+    $variables['output'] = ['#markup' => ' <p style="margin-bottom:0;" class="content-fiche  mb-0">' . $value . ' &nbsp;</p>'];
 
   }
 
@@ -104,13 +108,13 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
   //condition for postal code field
   if ($field->field == 'postal_code') {
     $value = $field->getValue($row);
-    $variables['output'] = ['#markup' => '<br><span class="content-fiche">' . $value . ' &nbsp;</span>'];
+    $variables['output'] = ['#markup' => '<span class="content-fiche  mb-0">' . $value . ' &nbsp;</span>'];
 
   }
 
-  $custom_service->alterViewFieldRender ('supplemental_address_1');
-  $custom_service->alterViewFieldRender ('supplemental_address_2');
-  $custom_service->alterViewFieldRender ('supplemental_address_3');
+  $custom_service->alterViewFieldRender ($field, 'supplemental_address_1', $variables);
+  $custom_service->alterViewFieldRender ($field, 'supplemental_address_2', $variables);
+  $custom_service->alterViewFieldRender ($field, 'supplemental_address_3', $variables);
 
   }
 }

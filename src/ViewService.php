@@ -113,13 +113,30 @@ class ViewService {
     return $query->fetchAll();
   }
 
-  public function alterViewFieldRender ($fieldName) {
+  public function alterViewFieldRender ($field, $fieldName, &$variables) {
+    $row = $variables['row'];
     if ($field->field == $fieldName) {
       $value = $field->getValue($row);
       if ($value) {
-        $variables['output'] = ['#markup' => '<p class="content-fiche">' . $value . ' &nbsp;</p>'];
+        $variables['output'] = ['#markup' => '<p class="content-fiche mb-0">' . $value . ' &nbsp;</p>'];
       }
     }
+  }
+
+  /**
+   * Check in database if a company has lat/long
+   *
+   * @param [type] $id
+   * @return void
+   */
+  public function checkIfCompanyHasLatAndLongitude($id) {
+    $res = \Civi\Api4\Address::get()
+    ->addSelect('geo_code_1', 'geo_code_2')
+    ->addWhere('contact_id', '=', $id)
+    ->execute()->first();
+    $hasLatitude = $res['geo_code_1'];
+    //$hasLongitude = $res['geo_code_2'];
+    return $hasLatitude;
   }
 
   public function  allDepartment () {

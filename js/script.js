@@ -711,9 +711,15 @@ console.log(lMap, ' test if this work')
       }
 
 
+       Drupal.Leaflet[mapid].start_zoom = start_zoom;
+       Drupal.Leaflet[mapid].lMap.setZoom(10);
+       Drupal.Leaflet[mapid].start_center = start_center;
+     }
+    if ((jQuery('.page-annuaire-table-liste-géographique').length > 0) && (window.location.search == '')) {
+      start_center.lat = 47,76620099445003;
+      start_center.lng = 1,5858760671640175;
       // Set the map start zoom and center.
-      Drupal.Leaflet[mapid].start_zoom = start_zoom;
-      Drupal.Leaflet[mapid].start_center = start_center;
+      Drupal.Leaflet[mapid].lMap.setView(start_center, 6);
     }
 
   };

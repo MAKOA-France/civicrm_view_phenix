@@ -9,6 +9,14 @@
     jQuery('.video-content-fiche').insertBefore('.testation2 .views-element-container');
 
 
+    //Page geographique Set default value filter by name
+
+    let matched = queryString.match(/organization_name=[a-z0-9\-]+/ig);
+    let filterByCompanyNameDefaultValue = '';
+    if (matched) {
+      filterByCompanyNameDefaultValue = matched[0].split('organization_name=')[1];
+    }
+
     //Page event -> filter by "nom de la marque"
     $(document).on('ajaxSuccess',function( event, xhr, settings){
       // will do something

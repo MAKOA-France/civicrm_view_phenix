@@ -127,6 +127,25 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
 
   }
 
+  //Page géographique filter
+  if ($view->storage->get('id') == 'entreprise_localisation' && $view->current_display == 'block_7') {
+    $req_company_name = $request->get('organization_name');
+    if ($req_company_name) {
+
+      $query->where[] =  array(
+        'conditions' => array(
+          array(
+            'field' => 'civicrm_contact_civicrm_address.organization_name',
+            'value' => "%$req_company_name%",
+            'operator' => 'LIKE',
+          ),
+        ),
+        'type' => 'AND',
+      );
+    }
+
+  }
+
   $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
   if ($view->storage->get('id') == 'location_occasion_membres_associes_' && $view->current_display == 'liste_carte') {
     $get_query = $request->query;

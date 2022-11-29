@@ -113,7 +113,7 @@ class CompanyProfileSecondProfile  extends BlockBase  {
       $brandLabel = $distributedBrand ? '<strong class="views-label views-label-marque-nom title-fiche">Marques : </strong>' : '';
 
       $mainActivity = $mainActivityLabel->first() ? '<p class="content-fiche"> ' .  $mainActivityLabel->first()['contact_id.org_dlr.activiteprincipale:label'] .  ' </p>' : '';
-      $html = '<div class="second-column atsiaaaa">
+      $html = '<div class="second-column company-profile-block">
         <strong class="views-label views-label-materiel-occasion title-fiche">Activité principale : </strong>
         ' . $mainActivity . '
         <br>

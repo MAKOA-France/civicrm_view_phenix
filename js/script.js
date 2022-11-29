@@ -8,6 +8,7 @@
     //Inverser l'affichage de la carte et la video  (fiche entreprise)
     jQuery('.video-content-fiche').insertBefore('.testation2 .views-element-container');
 
+
     //Page event -> filter by "nom de la marque"
     $(document).on('ajaxSuccess',function( event, xhr, settings){
       // will do something
@@ -88,6 +89,7 @@
     }
 
     $(window).on('load',function() {
+
       jQuery('.filter_by_dprtmt').val(depId);
       let brandValue = $('.marque-nom-copy').val();
       $.ajax({
@@ -95,7 +97,6 @@
         type: "get",
         data: {get_id: jQuery('[name="marque_nom"]').val()},
         success: (successResult, val, ee) => {
-          console.log(successResult, ' is fired POIJ ',  (successResult > 1))
           if (successResult > 1) {
             $('.marque-nom-copy').val('');
           }else {
@@ -316,7 +317,7 @@
     // Executes once per mapid.
   //  once('leaflet_map_event_' + mapid, 'html').forEach(function() {
       // Set the start center and the start zoom, and initialize the reset_map control.
-
+console.log(lMap, ' test if this work')
       // Attach leaflet ajax popup listeners.
       Drupal.Leaflet[mapid].lMap.on('tooltipopen', function(e) {
         let element = e.popup._contentNode;
@@ -685,12 +686,22 @@
         }
       }
 
+      if (window.location.href.indexOf('annuaire/details') > 1) {
+        Drupal.Leaflet[mapid].lMap.setZoom(8);
+      }
+
       // In case of map initial position not forced, and zooFiner not null/neutral,
       // adapt the Map Zoom and the Start Zoom accordingly.
       if (self.settings.hasOwnProperty('zoomFiner') && parseInt(self.settings.zoomFiner)) {
         start_zoom += parseFloat(self.settings.zoomFiner);
         Drupal.Leaflet[mapid].lMap.setView(start_center, start_zoom);
       }
+      // start_center.lat = 48.864716;
+      // start_center.lng = 2.349014;
+      if (window.location.href.indexOf('annuaire/details') < 1) {
+        Drupal.Leaflet[mapid].lMap.setZoom(1);
+      }
+
 
       // Set the map start zoom and center.
       Drupal.Leaflet[mapid].start_zoom = start_zoom;

@@ -116,7 +116,6 @@ class CompanyProfileSecondProfile  extends BlockBase  {
       $html = '<div class="second-column company-profile-block">
         <strong class="views-label views-label-materiel-occasion title-fiche">Activité principale : </strong>
         ' . $mainActivity . '
-        <br>
         <div class="content-fiche company-description">' . $description . '</div><br>
 
         ' . $materielHtml . '

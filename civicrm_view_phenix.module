@@ -326,6 +326,11 @@ function civicrm_view_phenix_preprocess_page(&$variables)
     $form['marque_nom']['#attributes']['class'][] = 'hide';
   }
 if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--liste-carte') {
+
+  //hide filter by "materiel location"
+  $form['materiel_location']['#attributes']['class'][] = 'hide';
+  $form['materiel_location']['#attributes']['name'] = '';
+
   //filter by departement
   $form['filter_by_dprtmt'] = [
     '#type' => 'select',

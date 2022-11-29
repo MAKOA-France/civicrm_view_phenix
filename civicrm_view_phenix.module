@@ -121,6 +121,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
  */
 function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $view, \Drupal\views\Plugin\views\query\QueryPluginBase $query) {
   $request = Drupal::request();
+  $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
 
   //Filtre by "nom de la marque"
   if ($view->storage->get('id') == 'location_occasion_membres_associes_' && $view->current_display == 'page_2') {
@@ -131,7 +132,6 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
   if ($view->storage->get('id') == 'entreprise_localisation' && $view->current_display == 'block_7') {
     $req_company_name = $request->get('organization_name');
     if ($req_company_name) {
-
       $query->where[] =  array(
         'conditions' => array(
           array(
@@ -142,6 +142,11 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
         ),
         'type' => 'AND',
       );
+    }
+
+    $req_by_department = $request->get('filter_by_deprtmt');
+    if ($req_by_department) {
+      $custom_service->addWhereQuery ($query, "$req_by_department%", 'civicrm_address', 'postal_code', 'LIKE');
     }
 
   }

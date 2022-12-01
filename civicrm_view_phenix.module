@@ -135,6 +135,9 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
   //Page géographique filter
   if ($view->storage->get('id') == 'entreprise_localisation' && $view->current_display == 'block_7') {
     $req_company_name = $request->get('organization_name');
+    $req_by_region = $request->get('state_province_id');
+    $req_by_department = $request->get('filter_by_deprtmt');
+
     if ($req_company_name) {
       $query->where[] =  array(
         'conditions' => array(
@@ -148,7 +151,10 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
       );
     }
 
-    $req_by_department = $request->get('filter_by_deprtmt');
+    if ($req_by_region) {
+      $custom_service->addWhereQuery ($query, $req_by_region, 'civicrm_address', 'state_province_id', '=');
+    }
+
     if ($req_by_department) {
       $custom_service->addWhereQuery ($query, "$req_by_department%", 'civicrm_address', 'postal_code', 'LIKE');
     }
@@ -184,6 +190,19 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
       $latitude = $view->exposed_data['geo_code_1'];
       $longitude = $view->exposed_data['geo_code_2'];
       \Drupal::service('page_cache_kill_switch')->trigger();
+
+      //Page location, if in the url there is materiel_location_new and materiel_location, only filter by materiel_location
+      if ($request->get('materiel_location_new') && $request->get('materiel_location')) {
+        if (isset($query->where[1]) && isset($query->where[1]['conditions'])) {
+          foreach ($query->where[1]['conditions'] as $key => $where) {
+            if (strpos($where['field'], 'civicrm_value_phx_materiel.materiel_location') !== false) {
+              unset($query->where[1]['conditions'][$key]);
+              break;
+            }
+          }
+        }
+      }
+
 
       $req_get = \Drupal::request()->query;
       if ($req_get) {
@@ -559,7 +578,7 @@ function build_ul_to_append_in_filter_toggle($ul_child, $id, $whiteslist, &$allU
   $each_ul = '<ul class="toggle-sub-materiel">';
   foreach($ul_child as $key => $li_child) {
     if (in_array($key, $whiteslist)) {
-      $each_ul .= '<li data-val="' . $key . '"><a href="?materiel_location_new=' . $id . '&materiel_location=' . $key . '">' . $li_child . '</a></li>';
+      $each_ul .= '<li data-val="' . $key . '"><a data-id="' . $id . '" href="?materiel_location_new=' . $id . '&materiel_location=' . $key . '">' . $li_child . '</a></li>';
     }
   }
 

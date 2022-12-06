@@ -9,6 +9,15 @@
     jQuery('.video-content-fiche').insertBefore('.testation2 .views-element-container');
 
 
+    //Page location filter by materiel location alter link
+    jQuery('ul li a[name*="materiel_location_new"]').on('mouseover', function() {
+      let currHref = jQuery(this).attr('href');
+      let matchedUrl = currHref.match(/&materiel_location=[0-9]+/);
+      if (matchedUrl) {
+         let newHref = currHref.replace(matchedUrl[0], '');
+          jQuery(this).attr('href', newHref);
+      }
+    })
     //Page geographique Set default value filter by name
 
     let matched = queryString.match(/organization_name=[a-z0-9\-]+/ig);
@@ -17,17 +26,26 @@
       filterByCompanyNameDefaultValue = matched[0].split('organization_name=')[1];
     }
 
-    //Page event -> filter by "nom de la marque"
+    //page geographique
+    jQuery('[value="Rechercher"]').once('leaflet').on('click', function() {
+      let dep = $('[name="filter_by_deprtmt"]').val()
+      if (dep == 'none') {
+        console.log('nnnone')
+        $('[name="filter_by_deprtmt"]').removeAttr('name');
+      }
+      if($('[name="organization_name"]').val() == '') {
+        $('[name="organization_name"]').removeAttr('name')
+      }
+      if($('[name="state_province_id"]').val() == 'All') {
+        $('[name="state_province_id"]').removeAttr('name')
+      }
+      if($('[name="postal_code"]').val() == '') {
+        $('[name="postal_code"]').removeAttr('name')
+      }
+
+    })
+
     $(document).on('ajaxSuccess',function( event, xhr, settings){
-      // will do something
-     /*  let brandVal = JSON.parse(xhr.responseText);
-      if (settings.url.indexOf('annuaire/occasion')> 0) {
-        if (brandVal && (brandVal.length < 2)) {
-          // $('[name="marque_nom"]').val(brandVal[0]['data-id']);
-        }else {
-          // $('[name="marque_nom"]').val('All');
-        }
-      } */
 
     });
 
@@ -67,25 +85,6 @@
       });
     }
     });
-/*     $('.marque-nom-copy').once('leaflet').on('keyup', function() {
-      if($('.marque-nom-copy').val() =='') {
-        $('[name="marque_nom"]').val('All');
-      }
-      console.log('ajax online', $(this).val(), );
-      $.ajax({
-        url: '/annuaire/occasion/setdefaultvalue',
-        type: "get",
-        data: {idMarque: $(this).val(), id:$('.marque-nom-copy').val()},
-        success: (successResult, val, ee) => {
-          console.log(successResult, ' is there ')
-          $('[name="marque_nom"]').val(successResult);
-
-        },
-        error: function(error) {
-          console.log(error, 'ERROR')
-        }
-      });
-    }); */
 
     //Filter by department (ajout default value by variable get)
     var depId = 'none';
@@ -121,6 +120,7 @@
 
     $('.toggle-sub-materiel').hide();
 
+    //todo location here
     var getLocation = 'materiel_location_new';
     if(queryString.indexOf(getLocation) > 0) {
       let matchedFilterLocation = queryString.match(/materiel_location_new=[0-9]+/g);
@@ -129,38 +129,8 @@
         jQuery('[name="materiel_location_new['+locationId+']"]').next('ul').show();
       }
     }
+
     jQuery('[name="materiel_location_new[All]"]').attr('href', '?materiel_location_new=All'); // activité recherche filtre
-    jQuery('.ul-parent-materiel-location > ul > li').each(function (id, el) {
-      if (id >0) {
-       // jQuery('.ul-parent-materiel-location > ul > li > a').off("click").attr('href', "javascript: void(0);");
-        jQuery(this).on('click', function () {
-          jQuery(this).find('.toggle-sub-materiel').toggle();
-
-        })
-      }
-    })
-/*
-    jQuery(document).ready(function(e) {
-      var directionsDisplay,
-      directionsService,
-      map;
-
-    function initialize() {
-    var directionsService = new google.maps.DirectionsService();
-    console.log(directionsService, 'jo');
-    directionsDisplay = new google.maps.DirectionsRenderer();
-    var chicago = new google.maps.LatLng(41.850033, -87.6500523);
-    var mapOptions = { zoom:7, mapTypeId: google.maps.MapTypeId.ROADMAP, center: chicago }
-    map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
-    directionsDisplay.setMap(map);
-    }
-
-
-    var directionsService = new google.maps.Geocoder();
-
-    console.log(directionsService, ' 555.')
-  }); */
-
 
 
     if (jQuery('.ul-parent-materiel-location').attr('data-all-ul')) {
@@ -257,13 +227,15 @@
 
           if (organisationName) {
             let newurl = removeLastUps.replace(regexOrgName, 'organization_name=' + organisationName + '&');
-            // if ()
-            //TODO ADD CONDITION WHEN DEPARTMENT IS
-            location.href = newurl;
+            if (queryString && ((jQuery('.page-annuaire-table-liste-géographique').length > 0) || (jQuery('.page-annuaire-location').length > 0))) {
+              location.href = queryString + '&organization_name=' + organisationName
+            }else {
+              location.href = newurl;
+            }
           }else{
             let newurl = removeLastUps.replace(regexOrgName, '');
             newurl = newurl.replace(regexRemoveLastUpsilon, '');
-            location.href = newurl;
+             location.href = newurl;
           }
         }
       }
@@ -325,7 +297,6 @@
     // Executes once per mapid.
   //  once('leaflet_map_event_' + mapid, 'html').forEach(function() {
       // Set the start center and the start zoom, and initialize the reset_map control.
-console.log(lMap, ' test if this work')
       // Attach leaflet ajax popup listeners.
       Drupal.Leaflet[mapid].lMap.on('tooltipopen', function(e) {
         let element = e.popup._contentNode;
@@ -339,8 +310,6 @@ console.log(lMap, ' test if this work')
 
             // Copy the html we received via AJAX to the popup, so we won't
             // have to make another AJAX call (#see 3258780).
-            e.popup.setContent('<p>checking...</p>');
-
             //Call update() so Leaflet refreshes the map, panning it if
             // necessary to bring the full popup into view (#see 3258780).
             e.popup.update();
@@ -354,55 +323,6 @@ console.log(lMap, ' test if this work')
   });
 
 
-  Drupal.Leaflet.prototype.add_features = function(mapid, features, initial) {
-    let self = this;
-    for (let i = 0; i < features.length; i++) {
-      let feature = features[i];
-      let lFeature;
-
-      // dealing with a layer group
-      if (feature.group) {
-        let lGroup = self.create_feature_group();
-        for (let groupKey in feature.features) {
-          let groupFeature = feature.features[groupKey];
-          lFeature = self.create_feature(groupFeature);
-          if (lFeature !== undefined) {
-            if (lFeature.setStyle) {
-              feature.path = feature.path ? (feature.path instanceof Object ? feature.path : JSON.parse(feature.path)) : {};
-              lFeature.setStyle(feature.path);
-            }
-            if (groupFeature.popup) {
-              lFeature.bindPopup(groupFeature.popup);
-            }
-            lGroup.addLayer(lFeature);
-          }
-        }
-
-        // Add the group to the layer switcher.
-        self.add_overlay(feature.label, lGroup, false, mapid);
-      }
-      else {
-        lFeature = self.create_feature(feature);
-        if (lFeature !== undefined) {
-          if (lFeature.setStyle) {
-            feature.path = feature.path ? (feature.path instanceof Object ? feature.path : JSON.parse(feature.path)) : {};
-            lFeature.setStyle(feature.path);
-          }
-          self.lMap.addLayer(lFeature);
-
-          if (feature.popup) {
-            lFeature.bindPopup(feature.popup);
-          }
-        }
-      }
-
-      // Allow others to do something with the feature that was just added to the map.
-      $(document).trigger('leaflet.feature', [lFeature, feature, self]);
-    }
-
-    // Allow plugins to do things after features have been added.
-    $(document).trigger('leaflet.features', [initial || false, self])
-  };
 
   Drupal.Leaflet.prototype.create_feature_group = function() {
     return new L.LayerGroup();
@@ -426,44 +346,6 @@ console.log(lMap, ' test if this work')
 
     return icon;
   };
-
-
-
-  //todo filter by departement, this code get all markerid that souldh be hidden
- /*  var whiteListCompany = '';
-  let param = window.location.search;
-  let isFilterByDpt = param.indexOf('departement=');
-
-  if (isFilterByDpt) {
-    let dptId = param.split('departement=')[1];
-    $.ajax({
-      url: '/annuaire/geographique/departement',
-      type: 'get',
-      data: {depId: dptId},
-      success: (success) => {
-        if (success) {
-          whiteListCompany = JSON.parse(success);
-        }
-
-      },
-      error: function(error) {
-        console.log(error, 'ERROR')
-      }
-    });
-  } */
-
-
-  //todo filter by address
-/*     $.ajax({
-    url: '/annuaire/geographique/address',
-    type: 'get',
-    success: (success, valq) => {
-
-    },
-    error: function(error) {
-      console.log(error, 'ERROR')
-    }
-  }); */
 
   Drupal.Leaflet.prototype.create_point = function(marker) {
     let self = this;
@@ -667,7 +549,8 @@ console.log(lMap, ' test if this work')
   //
   // @NOTE: This method used by Leaflet Markecluster module (don't remove/rename)
   Drupal.Leaflet.prototype.fitbounds = function(mapid) {
-    let self = this;
+    let self = this;;
+
     let start_zoom = self.settings.zoom ? self.settings.zoom : 12;
     // Note: self.settings.center might not be defined in case of Leaflet widget and Automatically locate user current position.
     let start_center = self.settings.center ? new L.LatLng(self.settings.center.lat, self.settings.center.lon) : new L.LatLng(0,0);
@@ -715,7 +598,7 @@ console.log(lMap, ' test if this work')
        Drupal.Leaflet[mapid].lMap.setZoom(10);
        Drupal.Leaflet[mapid].start_center = start_center;
      }
-    if ((jQuery('.page-annuaire-table-liste-géographique').length > 0) && (window.location.search == '')) {
+    if ((jQuery('.page-annuaire-table-liste-géographique').length > 0) && (window.location.search.indexOf('organization_name') > 0)) {
       start_center.lat = 47,76620099445003;
       start_center.lng = 1,5858760671640175;
       // Set the map start zoom and center.

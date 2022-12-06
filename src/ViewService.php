@@ -139,6 +139,32 @@ class ViewService {
     return $hasLatitude;
   }
 
+  public function getLatitude ($id) {
+    return civicrm_api4('Address', 'get', [
+      'select' => [
+        'geo_code_1',
+      ],
+      'where' => [
+        ['contact_id', '=', trim($id)],
+      ],
+    ]);
+
+  }
+
+  public function getLongitude ($id) {
+    return civicrm_api4('Address', 'get', [
+      'select' => [
+        'geo_code_2',
+      ],
+      'where' => [
+        ['contact_id', '=', trim($id)],
+      ],
+    ]);
+  }
+
+
+
+
   public function  allDepartment () {
 
     return

@@ -49,16 +49,33 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
       //Site web & dirigeant
       $value = $field->getValue($row);
 
+
+
+
+      //check if the company is French
+      $companyISinFrance = false;
+      $isInFrance = \Civi\Api4\Address::get()
+      ->addSelect('country_id', 'country_id:label')
+      ->addWhere('contact_id', '=', $company_id)
+      ->execute();
+      if ($isInFrance->first()['country_id'] == 1076) {
+        $companyISinFrance = true;
+      }
+
+     // dump($isInFrance->first()['country_id'], $companyISinFrance);
       //load map view
+      $custom_class = $companyISinFrance ? 'this-country-is-french' : '';
       $view = views_embed_view('entreprise_localisation', 'block_5');
       $hasLatitudeAndLongitude = $custom_service->checkIfCompanyHasLatAndLongitude($company_id);//don't display map if there is no marker
+      $view['#attributes']['class'][] = 'custom-view-embeded-map';
+      $view['#attributes']['class'][] = $custom_class;
       $view_rendered = $hasLatitudeAndLongitude ? \Drupal::service('renderer')->render($view) : '';
 
 
 
 
       $value = $value ? '<strong class="views-label views-label-url title-fiche">Site web : </strong>
-      <p class="field-content content-fiche"><a target="_blank" href="' . $value . '"> ' . $value . ' </a></p>' : '';
+      <p class="field-content content-fiche pt-0"><a target="_blank" href="' . $value . '">&nbsp;&nbsp;&nbsp; ' . $value . ' </a></p>' : '';
 
       $markup = [
         '#type' => 'inline_template',
@@ -72,7 +89,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
           <div class="views-field views-field-url d-flex">
           <strong class="views-label views-label-url title-fiche">Dirigeant : </strong>
-          <p class="field-content content-fiche">' . $contacts_name . '</p>
+          <p class="field-content content-fiche  pt-0">&nbsp;&nbsp;&nbsp; ' . $contacts_name . '</p>
           </div>' . $view_rendered,
         ],
       ];
@@ -80,7 +97,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
     }
   }
-// dump($field->field);
+
 
   //condition for city field
    if ($field->field == 'city') {
@@ -88,6 +105,13 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
       $variables['output'] = ['#markup' => '<span class="content-fiche">' . $value . ' &nbsp;'];
 
     }
+
+   //condition for email field
+  if ($field->field == 'email') {
+    $value = $field->getValue($row);
+    $variables['output'] = ['#markup' => ' <p class="content-fiche pt-0 mb-0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $value . ' &nbsp;</p>'];
+
+  }
 
    //condition for street address field
   if ($field->field == 'street_address') {
@@ -112,6 +136,13 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
   }
 
+
+  //condition for phone field
+  if ($field->field == 'phone_numeric') {
+    $value = $field->getValue($row);
+    $variables['output'] = ['#markup' => '<span class="content-fiche pt-0  mb-0">' . $value . ' &nbsp;</span>'];
+  }
+
   $custom_service->alterViewFieldRender ($field, 'supplemental_address_1', $variables);
   $custom_service->alterViewFieldRender ($field, 'supplemental_address_2', $variables);
   $custom_service->alterViewFieldRender ($field, 'supplemental_address_3', $variables);
@@ -124,16 +155,22 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
  * Implements hook_views_query_alter().
  */
 function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $view, \Drupal\views\Plugin\views\query\QueryPluginBase $query) {
+
+
   $request = Drupal::request();
   $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
 
   //Filtre by "nom de la marque"
-  if ($view->storage->get('id') == 'location_occasion_membres_associes_' && $view->current_display == 'page_2') {
+  if ($view->storage->get('id') == 'location_occasion_membres_associes_' && $view->current_display == 'page_5') {
 
   }
 
   //Page géographique filter
   if ($view->storage->get('id') == 'entreprise_localisation' && $view->current_display == 'block_7') {
+
+    $view->setOffset(5);
+    $view->getPager()->setItemsPerPage(2000);
+
     $req_company_name = $request->get('organization_name');
     $req_by_region = $request->get('state_province_id');
     $req_by_department = $request->get('filter_by_deprtmt');
@@ -263,7 +300,40 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
 
   //Company sheet only display the marker concerned (fiche entreprise)
    if (($view->storage->get('id') == 'entreprise_localisation') &&  ($view->current_display == 'block_5')) {
-    $current_id = \Drupal::request()->get('arg_0');
+
+
+    $current_contact_id = $request->get('arg_0');
+    $relationships = civicrm_api3('Relationship', 'get', [
+      'contact_id_a' => $current_contact_id,
+      'contact_id_b.contact_type' => "Organization",
+      'is_active' => 1,
+     // 'relationship_type_id' => $relationship_type_id,
+      'return' => ['id', 'contact_id_b', 'relationship_type_id.name_a_b', 'geo_code_1', 'geo_code_2'],
+      'option.limit' => 0,
+      'option.sort' => 'contact_id_b.display_name',
+    ]);
+
+
+    if ($result = $relationships) {
+      $result = $result['values'];
+      $agences = array_column($result, 'contact_id_b');
+      $agences[] = $request->get('arg_0');
+       $query->where[1]['conditions'][] = [
+        'field' => 'civicrm_address.contact_id' ,
+        'value' =>  $agences,
+        'operator' => 'IN',
+      ];
+    }else {
+      $query->where[1]['conditions'][] = [
+        'field' => 'civicrm_address.contact_id' ,
+        'value' =>  $current_contact_id,
+        'operator' => '=',
+      ];
+    }
+
+
+
+    /* $current_id = \Drupal::request()->get('arg_0');
     $latitude = civicrm_api4('Address', 'get', [
       'select' => [
         'geo_code_1',
@@ -272,6 +342,7 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
         ['contact_id', '=', trim($current_id)],
       ],
     ]);
+
     $longitude = civicrm_api4('Address', 'get', [
       'select' => [
         'geo_code_2',
@@ -290,7 +361,7 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
     //filter by company name longitude
     if ($longitude && $longitude->first()) {
       \Drupal::service('civicrm_view_phenix.view_services')->addWhereQuery ($query, $longitude->first()['geo_code_2'], 'civicrm_address', 'geo_code_2', '=');
-    }
+    } */
 
 
   }
@@ -567,6 +638,14 @@ function civicrm_view_phenix_preprocess_views_view(&$vars) {
 function civicrm_view_phenix_views_pre_render(Drupal\views\ViewExecutable  $view) {
   if ($view->storage->id() == 'fiche' && ($view->current_display == 'page_2')) {
     unset($view->result[1]);
+  }
+  if ($view->current_display == 'block_5') {
+  //  dump($view->result, $view);
+  }
+
+  //page geographique
+  if ($view->storage->get('id') == 'entreprise_localisation' && $view->current_display == 'block_7') {
+    //dump($view->pager);
   }
 }
 

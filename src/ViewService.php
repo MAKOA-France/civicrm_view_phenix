@@ -13,6 +13,8 @@ class ViewService {
 
   protected $currentUser;
 
+  const PAGE_GEOGRAPHIC_LIMIT = 900;
+
   /**
    * CustomService constructor.
    * @param AccountInterface $currentUser
@@ -162,7 +164,41 @@ class ViewService {
     ]);
   }
 
+  public function getDirigeant ($company_id) {
+    $database = \Drupal::database();
+    $query = $database->query('select * from civicrm_value_phx_Individual_contact_fonction where contact_fonction_entreprise = ' . $company_id);
+    $indiviualContactFonctions = $query->fetch();
+    if ($indiviualContactFonctions) {
 
+      $dirigeant_id = $indiviualContactFonctions->entity_id;
+
+      /* $contacts_name = \Civi\Api4\Contact::get()
+      ->addSelect('display_name')
+      ->addWhere('id', '=', $dirigeant_id)
+      ->execute()->first();
+      */
+
+      $get_contacts_name = $database->query('select display_name from civicrm_contact where id = ' . $dirigeant_id);
+      $contacts_name = $get_contacts_name->fetch();
+
+
+      if ($contacts_name) {
+        return $contacts_name->display_name;
+      }
+    }
+  }
+
+  public function getAgenceLinkedWithCompany ($companyId) {
+    return civicrm_api3('Relationship', 'get', [
+      'contact_id_a' => $companyId,
+      'contact_id_b.contact_type' => "Organization",
+      'is_active' => 1,
+    // 'relationship_type_id' => $relationship_type_id,
+      'return' => ['id', 'contact_id_b', 'relationship_type_id.name_a_b', 'geo_code_1', 'geo_code_2'],
+      'option.limit' => 0,
+      'option.sort' => 'contact_id_b.display_name',
+    ]);
+  }
 
 
   public function  allDepartment () {

@@ -1,5 +1,6 @@
 <?php
 
+use Drupal\civicrm_view_phenix\ViewService;
 use Drupal\views\Views;
 use Drupal\webprofiler\Views\ViewExecutableFactoryWrapper;
 use GuzzleHttp\Psr7\Request;
@@ -62,7 +63,6 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
         $companyISinFrance = true;
       }
 
-     // dump($isInFrance->first()['country_id'], $companyISinFrance);
       //load map view
       $custom_class = $companyISinFrance ? 'this-country-is-french' : '';
       $view = views_embed_view('entreprise_localisation', 'block_5');
@@ -70,6 +70,36 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
       $view['#attributes']['class'][] = 'custom-view-embeded-map';
       $view['#attributes']['class'][] = $custom_class;
       $view_rendered = $hasLatitudeAndLongitude ? \Drupal::service('renderer')->render($view) : '';
+
+      $all_agences = $custom_service->getAgenceLinkedWithCompany($company_id);
+      $all_agences = $all_agences['values'];
+      if (!empty($all_agences)) {
+        $all_agences_ids = array_column($all_agences, 'contact_id_b');
+
+        //Gel all lat/long
+        $all_lat_long_result = \Civi\Api4\Address::get()
+          ->addSelect('geo_code_1', 'geo_code_2')
+          ->addWhere('contact_id', 'IN', $all_agences_ids)
+          ->execute();
+
+        $total_result = $all_lat_long_result->count();
+
+        $all_agences_lat = $all_lat_long_result->column('geo_code_1');
+        $all_agences_lat[] = $custom_service->getLatitude($company_id)->first()['geo_code_1'];//add master Company too
+        $all_agences_lon = $all_lat_long_result->column('geo_code_2');
+        $all_agences_lon[] = $custom_service->getLongitude($company_id)->first()['geo_code_2'];//add master Company too
+      }else {
+        $all_agences_lat[] = $custom_service->getLatitude($company_id)->first()['geo_code_1'];//add master Company too
+        $all_agences_lon[] = $custom_service->getLongitude($company_id)->first()['geo_code_2'];//add master Company too
+      }
+
+      $avg_lat = array_filter($all_agences_lat);
+      $average_lat = array_sum($avg_lat)/count($avg_lat);
+      $average_lat = json_encode($average_lat);
+
+      $avg_lon = array_filter($all_agences_lon);
+      $average_lon = array_sum($avg_lon)/count($avg_lon);
+      $average_lon = json_encode($average_lon);
 
 
 
@@ -83,7 +113,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
         '#context' => [
           'yourhtml' =>  '
 
-          <div class="views-field views-field-url d-flex">
+          <div data-latitude="' . $average_lat . '" data-longitude="' .  $average_lon . '" data-total-result="' . $total_result . '" class="views-field views-field-url d-flex">
           ' . $value . '
           </div>
 
@@ -165,35 +195,42 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
 
   }
 
+  //old geographic page
+  if ($view->storage->get('id') == 'entreprise_localisation' && $view->current_display == 'page_2') {
+    $view->setOffset(5);
+    $view->getPager()->setItemsPerPage(40);
+  }
   //Page géographique filter
   if ($view->storage->get('id') == 'entreprise_localisation' && $view->current_display == 'block_7') {
-
-    $view->setOffset(5);
-    $view->getPager()->setItemsPerPage(2000);
 
     $req_company_name = $request->get('organization_name');
     $req_by_region = $request->get('state_province_id');
     $req_by_department = $request->get('filter_by_deprtmt');
 
+    //Filtrer par agence
+     $custom_service->addWhereQuery ($query, 'Cible', 'civicrm_contact_civicrm_address', 'contact_sub_type', '=');
+
+    // //Filtrer par type de contact organisation
+     $custom_service->addWhereQuery ($query, 'Organization', 'civicrm_contact_civicrm_address', 'contact_type', '=');
+
+     $custom_service->addWhereQuery ($query, 1, 'civicrm_address', 'is_primary', '=');
+     $custom_service->addWhereQuery ($query, 1, 'contact_id_civicrm_contact', 'is_primary', '=');
+
     if ($req_company_name) {
-      $query->where[] =  array(
-        'conditions' => array(
-          array(
-            'field' => 'civicrm_contact_civicrm_address.organization_name',
-            'value' => "%$req_company_name%",
-            'operator' => 'LIKE',
-          ),
-        ),
-        'type' => 'AND',
-      );
+      $custom_service->addWhereQuery ($query, "%$req_company_name%", 'civicrm_contact_civicrm_address', 'organization_name', 'LIKE');
     }
 
-    if ($req_by_region) {
+     if ($req_by_region) {
       $custom_service->addWhereQuery ($query, $req_by_region, 'civicrm_address', 'state_province_id', '=');
     }
 
     if ($req_by_department) {
       $custom_service->addWhereQuery ($query, "$req_by_department%", 'civicrm_address', 'postal_code', 'LIKE');
+    }
+
+    if (empty(\Drupal::request()->query->all())) {
+      $view->setOffset(5);
+      $view->getPager()->setItemsPerPage(ViewService::PAGE_GEOGRAPHIC_LIMIT);
     }
 
   }

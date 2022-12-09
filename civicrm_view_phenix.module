@@ -215,9 +215,13 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
 
      $custom_service->addWhereQuery ($query, 1, 'civicrm_address', 'is_primary', '=');
      $custom_service->addWhereQuery ($query, 1, 'contact_id_civicrm_contact', 'is_primary', '=');
-
+     $does_company_has_acronym = $custom_service->doesCompanyHasAcronym();
     if ($req_company_name) {
-      $custom_service->addWhereQuery ($query, "%$req_company_name%", 'civicrm_contact_civicrm_address', 'organization_name', 'LIKE');
+      if (!empty($does_company_has_acronym) && !is_numeric($does_company_has_acronym[0]->nick_name)) {
+        $custom_service->addWhereQuery ($query, "%$req_company_name%", 'civicrm_contact_civicrm_address', 'nick_name', 'LIKE');
+      }else {
+        $custom_service->addWhereQuery ($query, "%$req_company_name%", 'civicrm_contact_civicrm_address', 'organization_name', 'LIKE');
+      }
     }
 
      if ($req_by_region) {
@@ -302,27 +306,9 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
           $query_get_acronym = $database->query("SELECT nick_name FROM civicrm_contact where nick_name = '" . $organisation_name . "'")->fetchAll();
 
           if (!empty($query_get_acronym) && !is_numeric($query_get_acronym[0]->nick_name)) {
-            $query->where[] =  array(
-                  'conditions' => array(
-                  array(
-                      'field' => 'civicrm_contact.nick_name',
-                      'value' =>  $organisation_name,
-                      'operator' => '=',
-                    ),
-                  ),
-                  'type' => 'AND',
-                );
+            $custom_service->addWhereQuery ($query, "%$organisation_name%", 'civicrm_contact', 'nick_name', 'LIKE');
           }else {
-                $query->where[] =  array(
-              'conditions' => array(
-                array(
-                  'field' => 'civicrm_contact.organization_name',
-                  'value' => '%'. $organisation_name .'%',
-                  'operator' => 'LIKE',
-                ),
-              ),
-              'type' => 'AND',
-            );
+            $custom_service->addWhereQuery ($query, "%$organisation_name%", 'civicrm_contact', 'organization_name', 'LIKE');
           }
          }
     }

@@ -30,7 +30,6 @@
     jQuery('[value="Rechercher"]').once('leaflet').on('click', function() {
       let dep = $('[name="filter_by_deprtmt"]').val()
       if (dep == 'none') {
-        console.log('nnnone')
         $('[name="filter_by_deprtmt"]').removeAttr('name');
       }
       if($('[name="organization_name"]').val() == '') {
@@ -68,7 +67,6 @@
           type: "get",
           data: {idMarque: brandValue, id:$('.marque-nom-copy').val()},
           success: (successResult, val, ee) => {
-          console.log(successResult, ' is there ')
           if (successResult != 'none') {
             //check if url already filter by occas materiel
             if (!queryString) {
@@ -282,7 +280,7 @@
           // compatibility.
           $(document).trigger('leafletMapInit', [data.map, data.lMap, mapid]);
           // (Keep also the pre-existing event for back port compatibility)
-          $(document).trigger('leaflet.map', [data.map, data.lMap, mapid]);
+         // $(document).trigger('leaflet.map', [data.map, data.lMap, mapid]);
         });
       });
 
@@ -301,7 +299,7 @@
       Drupal.Leaflet[mapid].lMap.on('tooltipopen', function(e) {
         let element = e.popup._contentNode;
         let content = $('[data-leaflet-ajax-popup]', element);
-        //if (content.length) {console.log()
+        //if (content.length) {
           let elemHtml = $(element).find('article').attr('data-quickedit-entity-id');
           let id = elemHtml.split('civicrm_address/');
           id = id[1];
@@ -329,7 +327,7 @@
   };
 
 
-  Drupal.Leaflet.prototype.create_divicon = function (options) {
+/*   Drupal.Leaflet.prototype.create_divicon = function (options) {
     let html_class = options.html_class || '';
     let icon = new L.DivIcon({html: options.html, className: html_class});
 
@@ -345,7 +343,7 @@
     }
 
     return icon;
-  };
+  }; */
 
   Drupal.Leaflet.prototype.create_point = function(marker) {
     let self = this;
@@ -355,7 +353,6 @@
     let marker_title = marker.label ? marker.label.replace(/<[^>]*>/g, '').trim() : '';
 
     //filter marker display here by contactId if in array whitelist
-   // console.log('*****', marker.entity_id , whiteListCompany, '+++++++++')
    // if ((whiteListCompany && (jQuery.inArray(marker.entity_id, whiteListCompany) !== -1)) ) {
 
       let markerId = marker['entity_id'];
@@ -378,24 +375,20 @@
           matchId = matchId[0].split('/')[1];
         }
 
-        //todo here
-
-
 
         lMarker.bindPopup('').openPopup();
         let id = this.options.title;
-        let url = '/annuaire/geographique/details/' + matchId
+        let url = '/annuaire/geographique/details/' + matchId //todo
 
 
 
         $.ajax({
           url: url,
           type: "POST",
+          data: {idAddress: id},
           success: (successResult, val, ee) => {
-            console.log(this, e)
             //this._popup.setContent('')
             lMarker.bindPopup(successResult).openPopup();
-
           },
           error: function(error) {
             console.log(error, 'ERROR')
@@ -441,7 +434,7 @@
  // }//closing bracket filter
   };
 
-  Drupal.Leaflet.prototype.create_linestring = function(polyline) {
+/*   Drupal.Leaflet.prototype.create_linestring = function(polyline) {
     let self = this;
     let latlngs = [];
     for (let i = 0; i < polyline.points.length; i++) {
@@ -538,7 +531,7 @@
     lJSON.addData(json);
     return lJSON;
   };
-
+*/
   // Set Map initial map position and Zoom.  Different scenarios:
   //  1)  Force the initial map center and zoom to values provided by input settings
   //  2)  Fit multiple features onto map using Leaflet's fitBounds method
@@ -578,8 +571,22 @@
       }
 
       if (window.location.href.indexOf('annuaire/details') > 1) {
-        Drupal.Leaflet[mapid].lMap.setZoom(8);
+       // Drupal.Leaflet[mapid].lMap.setZoom(8);
       }
+      //Page fiche entreprise
+     if ($('.custom-view-embeded-map').length > 0 /*&& ($('.this-country-is-french').length > 0)*/) {
+
+      let ficheEntreprise = new L.LatLng(self.settings.center.lat, self.settings.center.lon);
+      //with min and max
+      ficheEntreprise.lat = $('.views-field-url').attr('data-latitude')
+      ficheEntreprise.lng = $('.views-field-url').attr('data-longitude')
+      // Set the map start zoom and center.
+      if ($('.views-field-url').attr('data-total-result') > 2) {
+        Drupal.Leaflet[mapid].lMap.setView(ficheEntreprise, 5,5);  //todo center on france
+      }else {
+        Drupal.Leaflet[mapid].lMap.setView(ficheEntreprise, 7.6);  //todo center on france
+      }
+     }
 
       // In case of map initial position not forced, and zooFiner not null/neutral,
       // adapt the Map Zoom and the Start Zoom accordingly.
@@ -595,14 +602,14 @@
 
 
        Drupal.Leaflet[mapid].start_zoom = start_zoom;
-       Drupal.Leaflet[mapid].lMap.setZoom(10);
+      //  Drupal.Leaflet[mapid].lMap.setZoom(10);
        Drupal.Leaflet[mapid].start_center = start_center;
      }
     if ((jQuery('.page-annuaire-table-liste-géographique').length > 0) && (window.location.search.indexOf('organization_name') > 0)) {
       start_center.lat = 47,76620099445003;
       start_center.lng = 1,5858760671640175;
       // Set the map start zoom and center.
-      Drupal.Leaflet[mapid].lMap.setView(start_center, 6);
+       Drupal.Leaflet[mapid].lMap.setView(start_center, 6);
     }
 
   };

@@ -188,6 +188,13 @@ class ViewService {
     }
   }
 
+  public function doesCompanyHasAcronym () {
+    $request = \Drupal::request();
+    $database = \Drupal::database();
+    $organisation_name = $request->query->get('organization_name');
+    return $database->query("SELECT nick_name FROM civicrm_contact where nick_name = '" . $organisation_name . "'")->fetchAll();
+  }
+
   public function getAgenceLinkedWithCompany ($companyId) {
     return civicrm_api3('Relationship', 'get', [
       'contact_id_a' => $companyId,

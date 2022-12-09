@@ -151,7 +151,7 @@
 
     const regexRemoveLastUpsilon = /\&$/;
     var removeLastUps = queryString.replace(regexRemoveLastUpsilon, '');
-    const regexOrgName = /organization_name=([a-z0-9 ]+&|&|[a-zA-Z0-9]+)/;
+    const regexOrgName = /organization_name=([a-z0-9éèê ]+&|&|[a-zA-Z0-9]+)/;
     const regexWordWithourUsp = /[a-zA-Z]+/;
 
 
@@ -225,15 +225,17 @@
 
           if (organisationName) {
             let newurl = removeLastUps.replace(regexOrgName, 'organization_name=' + organisationName + '&');
-            if (queryString && ((jQuery('.page-annuaire-table-liste-géographique').length > 0) || (jQuery('.page-annuaire-location').length > 0))) {
-              location.href = queryString + '&organization_name=' + organisationName
-            }else {
+            console.log(newurl);
+            if (queryString.includes('organization_name')) {
               location.href = newurl;
+            }else {
+              location.href = queryString + '&organization_name=' + organisationName
             }
           }else{
             let newurl = removeLastUps.replace(regexOrgName, '');
             newurl = newurl.replace(regexRemoveLastUpsilon, '');
-             location.href = newurl;
+            console.log(newurl, ' what inside...')
+            location.href = newurl;
           }
         }
       }
@@ -375,12 +377,9 @@
           matchId = matchId[0].split('/')[1];
         }
 
-
         lMarker.bindPopup('').openPopup();
         let id = this.options.title;
         let url = '/annuaire/geographique/details/' + matchId //todo
-
-
 
         $.ajax({
           url: url,

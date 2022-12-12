@@ -72,7 +72,15 @@
             if (!queryString) {
               location.href = '?marque_nom=' + successResult['id'];
             }else {
-              location.href = queryString + '&marque_nom=' + successResult['id'];
+              if (queryString.includes('marque_nom')) {
+                let matchedUrl = queryString.match(/marque_nom=[0-9]+/);
+                if (matchedUrl) {
+                  let newHref = queryString.replace(matchedUrl[0], 'marque_nom=' + successResult['id']);
+                  location.href = newHref;
+                }
+              }else {
+                location.href = queryString + '&marque_nom=' + successResult['id'];
+              }
             }
           }
 
@@ -234,7 +242,6 @@
           }else{
             let newurl = removeLastUps.replace(regexOrgName, '');
             newurl = newurl.replace(regexRemoveLastUpsilon, '');
-            console.log(newurl, ' what inside...')
             location.href = newurl;
           }
         }

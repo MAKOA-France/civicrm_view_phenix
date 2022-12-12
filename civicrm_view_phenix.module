@@ -105,7 +105,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
 
       $value = $value ? '<strong class="views-label views-label-url title-fiche">Site web : </strong>
-      <p class="field-content content-fiche pt-0"><a target="_blank" href="' . $value . '">&nbsp;&nbsp;&nbsp; ' . $value . ' </a></p>' : '';
+      <p class="field-content website-value content-fiche pt-0"><a target="_blank" href="' . $value . '"> ' . $value . ' </a></p>' : '';
 
       $markup = [
         '#type' => 'inline_template',
@@ -118,8 +118,8 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
           </div>
 
           <div class="views-field views-field-url d-flex">
-          <strong class="views-label views-label-url title-fiche">Dirigeant : </strong>
-          <p class="field-content content-fiche  pt-0">&nbsp;&nbsp;&nbsp; ' . $contacts_name . '</p>
+          <strong class="views-label views-label-url title-fiche dirigeant-value">Dirigeant : </strong>
+          <p class="field-content content-fiche dirigeant-name  pt-0"> ' . $contacts_name . '</p>
           </div>' . $view_rendered,
         ],
       ];
@@ -139,7 +139,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
    //condition for email field
   if ($field->field == 'email') {
     $value = $field->getValue($row);
-    $variables['output'] = ['#markup' => ' <p class="content-fiche pt-0 mb-0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $value . ' &nbsp;</p>'];
+    $variables['output'] = ['#markup' => ' <p class="content-fiche email-value pt-0 mb-0">' . $value . ' &nbsp;</p>'];
 
   }
 
@@ -197,9 +197,11 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
 
   //old geographic page
   if ($view->storage->get('id') == 'entreprise_localisation' && $view->current_display == 'page_2') {
-    $view->setOffset(5);
+    $view->setOffset(0);
     $view->getPager()->setItemsPerPage(40);
   }
+
+
   //Page géographique filter
   if ($view->storage->get('id') == 'entreprise_localisation' && $view->current_display == 'block_7') {
 
@@ -233,7 +235,7 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
     }
 
     if (empty(\Drupal::request()->query->all())) {
-      $view->setOffset(5);
+      $view->setOffset(0);
       $view->getPager()->setItemsPerPage(ViewService::PAGE_GEOGRAPHIC_LIMIT);
     }
 
@@ -459,17 +461,19 @@ if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--list
 }
   //change input to autocomplete
   if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--page-2') {
+    $form['materiel_occasion']['#weight'] = 1;
     $form['marque_nom_copy'] = [
       '#type' => 'textfield',
       '#title' => 'Nom de la marque ',
       '#autocomplete_route_name' => 'civicrm_view_phenix.autocomplete.name',
-      '#attributes' => ['class' => ['marque-nom-copy']]
+      '#attributes' => ['class' => ['marque-nom-copy']],
+      '#weight' => 0
     ];
 
    // $form['marque_nom']['#attributes']['class'][] = 'hidden';
 
     $form['actions']['submit']['#attributes']['class'][] = 'custom-submit-btn hide';
-    $form['marque_nom_copy']['#suffix'] = '<a class="button filter-by-brand">Rechercher</a>';
+    $form['materiel_occasion']['#suffix'] = '<a class="button filter-by-brand">Rechercher</a>';
 
   }
 

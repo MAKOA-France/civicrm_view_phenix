@@ -386,7 +386,7 @@
 
         lMarker.bindPopup('').openPopup();
         let id = this.options.title;
-        let url = '/annuaire/geographique/details/' + matchId //todo
+        let url = '/annuaire/geographique/details/' + id
 
         $.ajax({
           url: url,

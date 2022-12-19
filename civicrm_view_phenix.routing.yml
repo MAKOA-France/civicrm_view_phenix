@@ -37,3 +37,11 @@ civicrm_view_phenix.autocomplete.set.default.value:
     _controller: '\Drupal\civicrm_view_phenix\Controller\GetDetailController::setDefaultValue'
   requirements:
     _access: 'TRUE'
+
+civicrm_view_phenix.autocomplete.sous.famille:
+  path: '/admin/civicrm_view_phenix/autocomplete/sous-famille'
+  defaults:
+    _controller: '\Drupal\civicrm_view_phenix\Controller\GetDataController::autocompleteSousFamille'
+    _format: json
+  requirements:
+    _access: 'TRUE'

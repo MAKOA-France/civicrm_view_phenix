@@ -1,5 +1,6 @@
 (function($, Drupal, drupalSettings) {
 
+  const RED_MARKER_PATH = 'https://dlr-guide.dev.makoa.net/sites/dlr-guide.dev.makoa.net/modules/contrib_0/civicrm_view_phenix/img/red_marker.webp';
   Drupal.behaviors.leaflet = {
     attach: function(context, settings) {
 
@@ -8,6 +9,28 @@
     //Inverser l'affichage de la carte et la video  (fiche entreprise)
     jQuery('.video-content-fiche').insertBefore('.testation2 .views-element-container');
 
+    //Page location
+    $('.exposed-filter-location-btn').once('leaflet').on('click', function(){
+      let currVal = $('.filter-by-subfamily').val();
+      let values = currVal.split('(')[1];
+      let idSubFamily = values.replace(')', '');
+      $('.filter-by-subfamily').val(idSubFamily);
+      let organizationNameVal = $('.filter_by_name').val();
+      let filterBySubFamilyVal = $('.filter-by-subfamily').val();
+      if (organizationNameVal == '') {
+        $('.filter_by_name').removeAttr('name');
+      }
+      if (filterBySubFamilyVal == '') {
+        $('.filter-by-subfamily').removeAttr('name');
+      }else {
+        $('.filter-by-subfamily').attr('name', 'materiel_location');
+      }
+
+      if (jQuery('.ul-child-materiel-location').val() == 'All') {
+        jQuery('.ul-child-materiel-location').removeAttr('name');
+      }
+
+    });
 
     //Page location filter by materiel location alter link
     jQuery('ul li a[name*="materiel_location_new"]').on('mouseover', function() {
@@ -354,6 +377,9 @@
     return icon;
   }; */
 
+  if (Drupal.Leaflet) {
+
+
   Drupal.Leaflet.prototype.create_point = function(marker) {
     let self = this;
     let latLng = new L.LatLng(marker.lat, marker.lon);
@@ -408,6 +434,23 @@
       });
 
     if (marker.icon) {
+      //check if address id is a "cible"
+      /* $.ajax({
+        url: '/annuaire/geographique/check-company-type',
+        type: "POST",
+        data: {markerId: id},
+        success: (successResult, val, ee) => {
+          //this._popup.setContent('')
+          console.log(' RESULT SUCCESS')
+        },
+        error: function(error) {
+          console.log(error, 'ERROR')
+        }
+      }); */
+
+      // if (markerId == 10449) {
+        // marker.icon.iconUrl = RED_MARKER_PATH;
+      // }
       if (marker.icon.iconType && marker.icon.iconType === 'html' && marker.icon.html) {
         let icon = self.create_divicon(marker.icon);
         lMarker.setIcon(icon);
@@ -438,6 +481,7 @@
 
     return lMarker;
  // }//closing bracket filter
+  };
   };
 
 /*   Drupal.Leaflet.prototype.create_linestring = function(polyline) {
@@ -547,6 +591,8 @@
   //  6)  Cater for a map with no features (use input settings for Zoom and Center, if supplied)
   //
   // @NOTE: This method used by Leaflet Markecluster module (don't remove/rename)
+  if (Drupal.Leaflet) {
+
   Drupal.Leaflet.prototype.fitbounds = function(mapid) {
     let self = this;;
 
@@ -619,25 +665,31 @@
     }
 
   };
-
-  Drupal.Leaflet.prototype.map_reset = function(mapid) {
-    Drupal.Leaflet[mapid].lMap.setView(Drupal.Leaflet[mapid].start_center, Drupal.Leaflet[mapid].start_zoom);
   };
 
-  Drupal.Leaflet.prototype.map_reset_control = function(controlDiv, mapid) {
-    let self = this;
-    let reset_map_control_settings = drupalSettings.leaflet[mapid].map.settings.reset_map;
-    let control = new L.Control({position: reset_map_control_settings.position});
-    control.onAdd = function() {
-      // Set CSS for the control border.
-      let controlUI = L.DomUtil.create('div','resetzoom');
-      controlUI.style.backgroundColor = '#D92026';
-      controlUI.style.border = '2px solid #fff';
-      controlUI.style.borderRadius = '3px';
-      controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
-      controlUI.style.cursor = 'pointer';
-      controlUI.style.margin = '6px';
-      controlUI.style.textAlign = 'center';
+  if (Drupal.Leaflet) {
+
+    Drupal.Leaflet.prototype.map_reset = function(mapid) {
+      Drupal.Leaflet[mapid].lMap.setView(Drupal.Leaflet[mapid].start_center, Drupal.Leaflet[mapid].start_zoom);
+    };
+  }
+
+  if (Drupal.Leaflet) {
+
+    Drupal.Leaflet.prototype.map_reset_control = function(controlDiv, mapid) {
+      let self = this;
+      let reset_map_control_settings = drupalSettings.leaflet[mapid].map.settings.reset_map;
+      let control = new L.Control({position: reset_map_control_settings.position});
+      control.onAdd = function() {
+        // Set CSS for the control border.
+        let controlUI = L.DomUtil.create('div','resetzoom');
+        controlUI.style.backgroundColor = '#D92026';
+        controlUI.style.border = '2px solid #fff';
+        controlUI.style.borderRadius = '3px';
+        controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+        controlUI.style.cursor = 'pointer';
+        controlUI.style.margin = '6px';
+        controlUI.style.textAlign = 'center';
       controlUI.title = Drupal.t('Click to reset the map to its initial state');
       controlUI.id = 'leaflet-map--' + mapid + '--reset-control';
       controlUI.disabled = true;
@@ -654,15 +706,16 @@
       controlUI.appendChild(controlText);
 
       L.DomEvent
-        .disableClickPropagation(controlUI)
-        .addListener(controlUI, 'click', function() {
+      .disableClickPropagation(controlUI)
+      .addListener(controlUI, 'click', function() {
           self.map_reset(mapid);
         },controlUI);
-      return controlUI;
+        return controlUI;
+      };
+      return control;
     };
-    return control;
-  };
+  }
 
-})(jQuery, Drupal, drupalSettings);
+  })(jQuery, Drupal, drupalSettings);
 
 

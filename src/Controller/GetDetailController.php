@@ -37,6 +37,17 @@ class GetDetailController
         left join civicrm_phone as P ON P.contact_id = C.id
         WHERE C.id = " . $id);
 
+        //if the type of company is an "agence" then we will put the link to the parent profile
+        $get_contact_type =   $database->query("select contact_sub_type from civicrm_contact where id = " . $id)->fetch();
+        if ($get_contact_type) {
+          $contact_type = $get_contact_type->contact_sub_type;
+          if (strpos($contact_type, 'Agence') !== false) {
+            $get_contact_cible =   $database->query("select contact_id_a from civicrm_relationship where relationship_type_id = 32 and contact_id_b = " . $id)->fetch();
+            if ($get_contact_cible) {
+              $id = $get_contact_cible->contact_id_a;
+            }
+          }
+        }
 
         $allInfoAboutCompany = $allInfoAboutCompany->fetch();
         $dirigeant = $custom_service->getDirigeant($id);
@@ -129,6 +140,15 @@ class GetDetailController
 
     return new Response (2);
 
+  }
+
+  public function isCompanyACible () {
+
+    $isCible = false;
+    $request = \Drupal::request();
+    $address_id = $request->get('idAddress');
+
+    return new Response ($isCible);
   }
 
 

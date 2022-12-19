@@ -207,6 +207,92 @@ class ViewService {
     ]);
   }
 
+  public function getContactTypeById ($id) {
+    return \Civi\Api4\Contact::get()
+        ->addSelect('contact_sub_type')
+        ->addWhere('id', '=', $id)
+        ->execute();
+  }
+
+  public function getContactNameById($contactId) {
+    return \Civi\Api4\Contact::get()
+    ->addSelect('display_name')
+    ->addWhere('id', '=', $contactId)
+    ->execute()->first();
+  }
+
+
+/**
+ * Undocumented function
+ *
+ * @return void
+ */
+  public function sousFamille () {
+    return [
+      1 => 'Air comprimé',
+      2 => 'Blindage',
+      3 => 'Carrière',
+      4 => 'Chariot industriel',
+      5 => 'Chariot télescopique',
+      6 => 'Compactage',
+      6 => 'Compactage',
+      8 => 'Fournitures électriques & éclairage',
+      10 => 'Echafaudage',
+      11 => 'Forage/Sondage/Injection',
+      12 => 'Forage horizontal & trancheuses',
+      13 => 'Grues à tour',
+      14 => 'Hébergement, base-vie',
+      15 => 'Levage de charge',
+      16 => 'Métronomie/Controle',
+      17 => 'Nacelle/Plateforme Elévatrice',
+      18 => 'Perforation/Abattage',
+      19 => 'Pompage',
+      20 => 'Nettoyage',
+      21 => 'Sécurité, environnement',
+      22 => 'Sciage',
+      23 => 'Rabotage',
+      24 => 'Second oeuvre',
+      25 => 'Outillage électroportatif',
+      26 => 'Signalisation, accès, stabilisation',
+      27 => 'Terrassement',
+      28 => 'Traitement surface et sol',
+      29 => 'Traitement béton/Projection',
+      39 => 'Etaiement',
+      40 => 'Sanitaire, hygiène',
+      42 => 'Coffrage',
+      43 => 'Soudage',
+      44 => 'Démolition',
+      46 => 'Drones',
+      47 => 'Groupe électrogène',
+      48 => 'Maritime & fluviale',
+      49 => 'Véhicules électriques',
+      50 => 'Route',
+      51 => 'Recyclage, concassage, criblage',
+      52 => 'Unités mobiles de décontamination',
+      60 => 'Brumisateurs',
+      61 => 'Sablage',
+      62 => 'Toilettes sèches',
+      63 => 'Topographie',
+      64 => 'Laser',
+      65 => 'Camion-benne',
+      66 => 'Fourgon',
+      67 => 'Remorques',
+      68 => 'Chauffage',
+      69 => 'Climatisation',
+      70 => 'Décoration',
+      71 => 'Bricolage',
+      72 => 'Coupe et broyage',
+      73 => 'Taille et entretien',
+      74 => 'Agriculture',
+      75 => 'Transport des végétaux',
+      76 => 'Préparation des sols',
+      77 => 'Tentes, Chapiteaux, Barnums…',
+      78 => 'Mobilier',
+      79 => 'Cuisine professionnelle',
+      80 => 'Audio-visuel',
+
+    ];
+  }
 
   public function  allDepartment () {
 

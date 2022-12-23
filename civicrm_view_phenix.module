@@ -467,10 +467,18 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
    $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_group_contact', 'civicrm_group_contact_alias', 'contact_id', 'id' );
 
    $custom_service->addWhereQuery ($query,   [1, 2, 3, 4], 'civicrm_contact_1', 'membership_type_id', 'IN');
-   //$custom_service->addWhereQuery ($query,   195, 'civicrm_group_contact_alias ', 'group_id', '=');
+
+
+   $contacts_who_are_in_dynamic_group = \Civi\Api4\Contact::get()
+   ->addSelect('id')
+   ->addWhere('groups', 'IN', [ViewService::TOUT_MEMBRE_ACTUEL_ID])
+   ->execute()->column('id');
+
+   if ($contacts_who_are_in_dynamic_group) {
+     $custom_service->addWhereQuery ($query,   $contacts_who_are_in_dynamic_group, 'civicrm_contact ', 'id', 'IN');
+   }
 
     $view->setExposedInput(['sort_by' => 'postal_code', 'sort_order' => 'ASC']);
-
   }
 
 

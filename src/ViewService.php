@@ -14,6 +14,7 @@ class ViewService {
   protected $currentUser;
 
   const PAGE_GEOGRAPHIC_LIMIT = 900;
+  const TOUT_MEMBRE_ACTUEL_ID = 195;
 
   /**
    * CustomService constructor.

@@ -115,14 +115,16 @@ class CompanyProfileSecondProfile  extends BlockBase  {
       $mainActivityLabelVal = $mainActivityLabel->first()['contact_id.org_dlr.activiteprincipale:label'];
       $mainActivityLabelVal = str_replace('Professionnel DLR : ', '', $mainActivityLabelVal);
 
-      $mainActivity = $mainActivityLabel->first() ? '<p class="content-fiche"> ' .  $mainActivityLabelVal .  ' </p>' : '';
-      $html = '<div class="second-column company-profile-block">
-        <strong class="views-label views-label-materiel-occasion title-fiche">Activité principale : </strong>
-        ' . $mainActivity . '
-        <strong class="views-label views-label-marque-nom title-fiche">Descriptif de l\'entreprise : </strong>
-        <div class="content-fiche company-description">' . $description . '</div><br>
+      $mainActivity = $mainActivityLabel->first() ? '
+      <strong class="views-label views-label-materiel-occasion title-fiche">Activité principale : </strong>
+      <p class="content-fiche"> ' .  $mainActivityLabelVal .  ' </p>' : '';
 
-        ' . $materielHtml . '
+      $htmlDescription = strlen($description) > 5 ? ' <strong class="views-label views-label-marque-nom title-fiche">Descriptif de l\'entreprise : </strong>
+        <div class="content-fiche company-description">' . $description . '</div><br>' : '';
+
+      $html = '<div class="second-column company-profile-block">
+        ' . $mainActivity . $htmlDescription
+         . $materielHtml . '
 
         ' . $brandLabel . '
         ' . $distributedBrand . '

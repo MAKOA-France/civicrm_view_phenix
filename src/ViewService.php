@@ -207,6 +207,13 @@ class ViewService {
     ]);
   }
 
+  public function getCompanyCibleByAgenceId ($agenceId) {
+    return \Civi\Api4\Relationship::get()
+    ->addWhere('contact_id_b', '=', $agenceId)
+    ->addWhere('relationship_type_id', '=', 32)
+    ->execute()->column('contact_id_a');
+  }
+
   public function getContactTypeById ($id) {
     return \Civi\Api4\Contact::get()
         ->addSelect('contact_sub_type')
@@ -219,6 +226,18 @@ class ViewService {
     ->addSelect('display_name')
     ->addWhere('id', '=', $contactId)
     ->execute()->first();
+  }
+
+  public function joinTable ($query, $currentTable, $targetTable, $tableAlias, $foreign_id, $id) {
+    $definition = [
+      'table' => $targetTable,
+      'field' => $foreign_id,
+      'left_table' => $currentTable,
+      'left_field' => $id,
+    ];
+    $join = \Drupal::service('plugin.manager.views.join')->createInstance('standard', $definition);
+    return $query->addRelationship($tableAlias, $join, $currentTable);
+
   }
 
 
@@ -298,7 +317,7 @@ class ViewService {
 
     return
     [
-      'none' => t('Choisir departement'),
+      'All' => t('Choisir departement'),
       '01' =>  'Ain',
       '02' =>  'Aisne',
       '03' =>  'Allier',

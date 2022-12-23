@@ -19,6 +19,14 @@
         }
       });
 
+      //Page geographique
+      $('.pager__item').once('leaflet').on('click', function() {
+        let cityValue = $('[name="city"]').val();
+        if (cityValue == '') {
+          $('[name="city"]').val('none')
+        }
+      });
+
     }
   }
 

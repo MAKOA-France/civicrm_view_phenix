@@ -9,6 +9,7 @@ use GuzzleHttp\Psr7\Request;
 
 function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
+  //TODO maybe here too
   $view = $variables['view'];
   $field = $variables['field'];
   $row = $variables['row'];
@@ -22,6 +23,49 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
       $variables['output'] = $formatted;
     }
   }
+
+
+  $all_white_list_page = ['page_5', 'page_2', 'page_1', 'page_7_reparation', 'page_10_grue_tour', 'page_11_labelse', 'block_membres_associes'];
+
+
+  //Page Alphabetique
+  //Page geographique
+  if ($view->storage->id() == 'location_occasion_membres_associes_' && in_array($view->current_display, $all_white_list_page)) {
+    if ($field->field == 'organization_name' || $field->field == 'legal_name') {
+      $current_company_id = $variables['row']->id;
+      $get_contact_type =  \Drupal::service('civicrm_view_phenix.view_services')->getContactTypeById ($current_company_id)->first();
+      $font_awesome_html = '';
+
+      $agence_icon = '<i class=\'far fa-building pr-12 \'></i>';
+
+      $cible_icon = '<i class=\'fas fa-city pr-8 \'></i>';
+
+      if (!empty($get_contact_type)) {
+        $isCible = $get_contact_type['contact_sub_type'][0] == 'Cible';
+        $font_awesome_html = $isCible ? $cible_icon : $agence_icon;
+      }
+
+      $value = $field->getValue($row);
+      $current_value_name = $variables['output']->__toString();
+
+      //Override link
+      if (!empty($get_contact_type)) {
+        $isCible = $get_contact_type['contact_sub_type'][0] == 'Cible';
+        $font_awesome_html = $isCible ? $cible_icon : $agence_icon;
+
+        $isAgence = $get_contact_type['contact_sub_type'][0] == 'Agence';
+        $value = $field->getValue($row);
+        $current_value_name = $variables['output']->__toString();
+
+        }
+        $variables['output'] = ['#markup' => '<span class="content-fiche">  ' . $font_awesome_html . $current_value_name . ' &nbsp;'];
+      }
+      //$variables['output']
+    }
+
+
+
+
 
   //Page geographique
   if ($view->storage->id() == 'location_occasion_membres_associes_' && $view->current_display == 'liste_carte') {
@@ -41,6 +85,36 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
       $value = $field->getValue($row);
       $current_value_name = $variables['output']->__toString();
+
+      //Override link
+      if (!empty($get_contact_type)) {
+        $isCible = $get_contact_type['contact_sub_type'][0] == 'Cible';
+        $font_awesome_html = $isCible ? $cible_icon : $agence_icon;
+
+        $isAgence = $get_contact_type['contact_sub_type'][0] == 'Agence';
+        $value = $field->getValue($row);
+        $current_value_name = $variables['output']->__toString();
+         if ($isAgence) {
+          //Override link
+          $idCibleLinkedWithThisAgence = $custom_service->getCompanyCibleByAgenceId($current_company_id);
+          //regex
+
+          preg_match('/annuaire\/details\/[0-9]+/', $current_value_name, $matches);
+
+          if (!empty($matches) && $idCibleLinkedWithThisAgence) {
+            $previous_value = $matches[0];
+            $current_value_name = str_replace($current_company_id, $idCibleLinkedWithThisAgence[0], $current_value_name);
+          }
+        }
+        $variables['output'] = ['#markup' => '<span class="content-fiche">  ' . $font_awesome_html . $current_value_name . ' &nbsp;'];
+      }
+
+
+
+
+
+
+
       $variables['output'] = ['#markup' => '<span class="content-fiche">  ' . $font_awesome_html . $current_value_name . ' &nbsp;'];
       //$variables['output']
     }
@@ -158,15 +232,15 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
 
 
+      $dirigeant_2_html = $dirigeant_name_2 ? ' et ' . $dirigeant_name_2  : '';
 
       $value = $value ? '<strong class="views-label views-label-url title-fiche">Site web : </strong>
       <p class="field-content website-value content-fiche pt-0"><a target="_blank" href="' . $value . '"> ' . $value . ' </a></p>' : '';
 
-      $dirigeant_1_html = $dirigeant_name_1 ? ' <strong class="views-label views-label-url title-fiche dirigeant-value">Dirigeant 1 : </strong>
-      <p class="field-content content-fiche dirigeant-name  pt-0"> ' . $dirigeant_name_1 . '</p>' : '';
+      $isPlural = $dirigeant_name_2 ? 's' : '';
 
-      $dirigeant_2_html = $dirigeant_name_2 ? ' <strong class="views-label views-label-url title-fiche dirigeant-value">Dirigeant 2 : </strong>
-      <p class="field-content content-fiche dirigeant-name  pt-0"> ' . $dirigeant_name_2 . '</p>' : '';
+      $dirigeant_1_html = $dirigeant_name_1 ? ' <strong class="views-label views-label-url title-fiche dirigeant-value">Dirigeant' . $isPlural  . ' : </strong>    <p class="field-content content-fiche dirigeant-name  pt-0"> ' . $dirigeant_name_1 . $dirigeant_2_html . '</p>' : '';
+
 
       $markup = [
         '#type' => 'inline_template',
@@ -181,11 +255,6 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
           <div class="views-field views-field-url d-flex">
 
           ' . $dirigeant_1_html .  '
-
-          </div>
-          <div class="views-field views-field-url d-flex">
-
-          ' . $dirigeant_2_html .  '
 
           </div>
           ' ,
@@ -291,6 +360,12 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
     $view->setOffset(0);
     $view->getPager()->setItemsPerPage(400);
   }
+  if ($view->storage->get('id') == 'entreprise_localisation' && ( $view->current_display == 'page_3') ) {
+    $letter_alphabet = $request->query->get('letter');
+    if ($letter_alphabet) {
+      $custom_service->addWhereQuery ($query,   'j%', 'civicrm_contact_civicrm_address', 'organization_name', 'like');
+    }
+  }
 
   //Page Location
   if ($view->storage->get('id') == 'location_occasion_membres_associes_' && $view->current_display == 'page_1') {
@@ -342,7 +417,7 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
       $custom_service->addWhereQuery ($query, $req_city, 'civicrm_address', 'city', '=');
     }
 
-    if ($req_by_department) {
+    if ($req_by_department && ($req_by_department != 'All')) {
       $custom_service->addWhereQuery ($query, "$req_by_department%", 'civicrm_address', 'postal_code', 'LIKE');
     }
 
@@ -378,7 +453,25 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
           );
     }
 
+
+
+    //Join table civicrm_membership filter by member Associé
+    $definition = [
+      'table' => 'civicrm_membership',
+      'field' => 'contact_id',
+      'left_table' => 'civicrm_contact',
+      'left_field' => 'id',
+    ];
+    $join = Drupal::service('plugin.manager.views.join')->createInstance('standard', $definition);
+    $query->addRelationship('civicrm_contact', $join,'civicrm_contact');
+
+   $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_group_contact', 'civicrm_group_contact_alias', 'contact_id', 'id' );
+
+   $custom_service->addWhereQuery ($query,   [1, 2, 3, 4], 'civicrm_contact_1', 'membership_type_id', 'IN');
+   //$custom_service->addWhereQuery ($query,   195, 'civicrm_group_contact_alias ', 'group_id', '=');
+
     $view->setExposedInput(['sort_by' => 'postal_code', 'sort_order' => 'ASC']);
+
   }
 
 
@@ -514,10 +607,32 @@ function custom_query_condition ($query, $longitude, $field) {
  */
 function civicrm_view_phenix_preprocess_page(&$variables)
 {
+  $request = \Drupal::request();
   $variables['#attached']['library'][] = 'civicrm_view_phenix/civicrm_view_phenix';
 
 }
 
+/**
+ * Alter pager link
+ *
+ * implement hook_preprocess_pager()
+ *
+ * @param [type] $variables
+ * @return void
+ */
+function civicrm_view_phenix_preprocess_pager(&$variables) {
+  $current_path = \Drupal::service('path.current')->getPath();
+  $white_list_alter_pager = ['/annuaire/location', '/annuaire/occasion', '/annuaire/table-liste-géographique'];
+
+  if (in_array($current_path, $white_list_alter_pager )) {
+    foreach ($variables['items']['pages'] as &$page_link) {
+      $page = str_replace("organization_name=&", '', $page_link['href']);
+      $page = str_replace("subfamily=&", '', $page);
+      $page = str_replace("city=&", '', $page);
+      $page_link['href'] = $page;
+    }
+  }
+}
 
 
  function civicrm_view_phenix_form_views_exposed_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
@@ -548,6 +663,7 @@ if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--list
     ],
     '#options' => \Drupal::service('civicrm_view_phenix.view_services')->allDepartment(),
     '#name' => 'filter_by_deprtmt',
+    '#default_value' => 'All',
     '#weight' => 0,
   ];
 }
@@ -802,6 +918,8 @@ function civicrm_view_phenix_views_pre_view(Drupal\views\ViewExecutable $view, $
       );
       $view->setHandler('liste_carte', 'footer', 'area_text_custom', $options);
     }
+
+    //TODOO maybe here or
   }
 }
 

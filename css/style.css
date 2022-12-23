@@ -1,0 +1,86 @@
+header .top-bar {
+    background: white;
+    border: 1px solid;
+}
+
+.menu li.menu-item a{
+    color: #707070;
+    font-weight: bold;
+    font-size: 100%;
+    display: flex;
+    padding: 8px 15px;
+    align-items: center;
+    text-transform: capitalize;
+}
+
+thead, tbody, tfoot {
+    background-color: white !important;
+}
+table tbody tr {
+    background: #7070701A !important;
+}
+thead {
+    background: #7070701A !important;
+}
+table.cols-4 tr {
+    border: 1px solid #e7d8d8;
+}
+
+table.cols-5 tr {
+    border: 1px solid #e7d8d8;
+}
+
+/**/
+.a-z-block a {
+  font-size: 13px;
+  padding: 5px;
+}
+[data-active-letter="active-letter"] {
+  background: #E20037;
+  color: white;
+}
+
+/* Mise en forme de la page POLICE */
+
+#views-exposed-form-location-occasion-membres-associes--liste-carte label, #views-exposed-form-location-occasion-membres-associes--page-2 label, #views-exposed-form-location-occasion-membres-associes--page-1 label,
+.form-item-organization-name label  {
+
+  font-family: "Roboto", Sans-serif;
+  font-weight: bold;
+  line-height: 28px;
+  color: #54595f;
+  font-size: 100%;
+}
+
+.cols-4 thead th {
+  color: #878786;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.content-fiche {
+  color: #707070;
+}
+
+
+body {
+  color: #54595f !important;
+}
+
+.page-annuaire-membres-associes #item{
+
+  color: #82888f;
+}
+footer .menu li.menu-item a {
+
+  font-weight: 400;
+  line-height: 1.5;
+}
+footer .basic__body.quickedit-field p {
+  color: #707070;
+}
+
+footer p {
+  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
+}
+

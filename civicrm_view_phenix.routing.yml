@@ -1,0 +1,47 @@
+civicrm_view_phenix.get.info.ajax.to.map:
+  path: '/annuaire/geographique/details/{id}'
+  defaults:
+    _controller: '\Drupal\civicrm_view_phenix\Controller\GetDetailController::getGuideDetail'
+    _title: 'Page détail guide'
+  requirements:
+    _permission: 'access content'
+    id: \d+
+
+civicrm_view_phenix.filter:
+  path: '/annuaire/geographique/address'
+  defaults:
+    _controller: '\Drupal\civicrm_view_phenix\Controller\GetDetailController::filterByAddress'
+    _title: 'Page filter by address'
+  requirements:
+    _permission: 'access content'
+
+civicrm_view_phenix.filter.by.department:
+  path: '/annuaire/geographique/departement'
+  defaults:
+    _controller: '\Drupal\civicrm_view_phenix\Controller\GetDetailController::filterByDepartment'
+    _title: 'Page filter by department'
+  requirements:
+    _permission: 'access content'
+
+civicrm_view_phenix.autocomplete.name:
+  path: '/annuaire/occasion/*'
+  defaults:
+    _controller: '\Drupal\civicrm_view_phenix\Controller\GetDetailController::filterAutocomplete'
+    _format: json
+  requirements:
+    _access: 'TRUE'
+
+civicrm_view_phenix.autocomplete.set.default.value:
+  path: '/annuaire/occasion/setdefaultvalue'
+  defaults:
+    _controller: '\Drupal\civicrm_view_phenix\Controller\GetDetailController::setDefaultValue'
+  requirements:
+    _access: 'TRUE'
+
+civicrm_view_phenix.autocomplete.sous.famille:
+  path: '/admin/civicrm_view_phenix/autocomplete/sous-famille'
+  defaults:
+    _controller: '\Drupal\civicrm_view_phenix\Controller\GetDataController::autocompleteSousFamille'
+    _format: json
+  requirements:
+    _access: 'TRUE'

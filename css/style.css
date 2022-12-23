@@ -83,4 +83,12 @@ footer .basic__body.quickedit-field p {
 footer p {
   font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
 }
+#block-b-zf-content > div > div > header{
+  font-size: 14px;
+}
+thead th,
+tbody td,
+a{
+    font-size: 12px;
+}
 

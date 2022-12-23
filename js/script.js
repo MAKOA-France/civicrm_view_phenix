@@ -10,21 +10,20 @@
     jQuery('.video-content-fiche').insertBefore('.testation2 .views-element-container');
 
     //Page location
+    $('.filter-by-subfamily').removeAttr('name');
     $('.exposed-filter-location-btn').once('leaflet').on('click', function(){
       let currVal = $('.filter-by-subfamily').val();
       let values = currVal.split('(')[1];
       let idSubFamily = values.replace(')', '');
-      $('.filter-by-subfamily').val(idSubFamily);
+      $('[name="subfamily"]').removeAttr('name');
+      $('[name="materiel_location"]').val(idSubFamily)
+      console.log(values)
       let organizationNameVal = $('.filter_by_name').val();
       let filterBySubFamilyVal = $('.filter-by-subfamily').val();
       if (organizationNameVal == '') {
         $('.filter_by_name').removeAttr('name');
       }
-      if (filterBySubFamilyVal == '') {
-        $('.filter-by-subfamily').removeAttr('name');
-      }else {
-        $('.filter-by-subfamily').attr('name', 'materiel_location');
-      }
+
 
       if (jQuery('.ul-child-materiel-location').val() == 'All') {
         jQuery('.ul-child-materiel-location').removeAttr('name');
@@ -116,7 +115,7 @@
     });
 
     //Filter by department (ajout default value by variable get)
-    var depId = 'none';
+    var depId = 'All';
     if (queryString.indexOf('filter_by_deprtmt')) {
         let matched =  queryString.match(/filter_by_deprtmt=[0-9]+/g);
         if(matched) {
@@ -176,7 +175,7 @@
         //show default selected materiel
         //todo here jQuery('ul').has('li[data-val=' + window.location.search.split('materiel_location=')[1] + ']').show();
         //stylized selected filter
-        jQuery('li a[href="' + window.location.search +'"]').css({'textDecoration' : 'underline', 'fontWeight': 'bold'});
+        //jQuery('li a[href="' + window.location.search +'"]').css({'textDecoration' : 'underline', 'fontWeight': 'bold'});
       }
     }
 
@@ -382,6 +381,8 @@
 
   Drupal.Leaflet.prototype.create_point = function(marker) {
     let self = this;
+    console.log(marker.lat, marker.lon, ' loading..')
+
     let latLng = new L.LatLng(marker.lat, marker.lon);
     self.bounds.push(latLng);
     let lMarker;
@@ -636,7 +637,7 @@
       if ($('.views-field-url').attr('data-total-result') > 2) {
         Drupal.Leaflet[mapid].lMap.setView(ficheEntreprise, 5,5);  //todo center on france
       }else {
-        Drupal.Leaflet[mapid].lMap.setView(ficheEntreprise, 7.6);  //todo center on france
+       // Drupal.Leaflet[mapid].lMap.setView(ficheEntreprise, 7.6);  //todo center on france
       }
      }
 
@@ -649,12 +650,12 @@
       // start_center.lat = 48.864716;
       // start_center.lng = 2.349014;
       if (window.location.href.indexOf('annuaire/details') < 1) {
-        Drupal.Leaflet[mapid].lMap.setZoom(1);
+       // Drupal.Leaflet[mapid].lMap.setZoom(1);
       }
 
 
        Drupal.Leaflet[mapid].start_zoom = start_zoom;
-      //  Drupal.Leaflet[mapid].lMap.setZoom(10);
+        Drupal.Leaflet[mapid].lMap.setZoom(7);
        Drupal.Leaflet[mapid].start_center = start_center;
      }
     if ((jQuery('.page-annuaire-table-liste-géographique').length > 0) && (window.location.search.indexOf('organization_name') > 0)) {

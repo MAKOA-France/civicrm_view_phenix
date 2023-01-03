@@ -229,6 +229,17 @@ class ViewService {
     ->execute()->first();
   }
 
+  /**
+   * Undocumented function
+   *
+   * @param [type] $query
+   * @param [type] $currentTable --> table courant
+   * @param [type] $targetTable  --> table à joindre
+   * @param [type] $tableAlias
+   * @param [type] $foreign_id
+   * @param [type] $id
+   * @return void
+   */
   public function joinTable ($query, $currentTable, $targetTable, $tableAlias, $foreign_id, $id) {
     $definition = [
       'table' => $targetTable,

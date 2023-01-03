@@ -347,7 +347,7 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
   $white_list_for_is_deleted = ['liste_carte', 'page_5', 'page_2', 'page_1', 'page_7_reparation', 'page_10_grue_tour', 'page_11_labelse', 'block_membres_associes'];
   if ($view->storage->get('id') == 'location_occasion_membres_associes_' && in_array($view->current_display, $white_list_for_is_deleted)) {
     $custom_service->addWhereQuery ($query, 0, 'civicrm_contact', 'is_deleted', '=');
-    //todo alter query champ Annuaire en ligne = OUI
+    //alter query champ Annuaire en ligne = OUI  Pour les organisations
     $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_value_phx_org_annuaireenligne', 'civicrm_value_phx_org_annuaireenligne', 'entity_id', 'id') ;
     $custom_service->addWhereQuery ($query, 1, 'civicrm_value_phx_org_annuaireenligne', 'org_annuaireenligne_DLR', '=');
   }
@@ -366,11 +366,11 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
 
   //Page Location
   if ($view->storage->get('id') == 'location_occasion_membres_associes_' && $view->current_display == 'page_1') {
-    //civicrm_value_phx_materiel.materiel_location
     //  $custom_service->addWhereQuery ($query, 68, 'civicrm_value_phx_materiel', 'materiel_location', '=');
-
-
-    //  dump('kd', $query, $query->where);
+    $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_group_contact', 'civicrm_group_contact', 'contact_id', 'id' );
+    $custom_service->addWhereQuery ($query,   'Added', 'civicrm_group_contact', 'status', '='); //État du Groupe 'Added'
+    $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_value_phx_secteur', 'civicrm_value_phx_secteur', 'entity_id', 'id' );
+    $custom_service->addWhereQuery ($query,   '1', 'civicrm_value_phx_secteur', 'phx_secteur_loueur', '='); // Secteur = Loueur OUI
   }
 
 

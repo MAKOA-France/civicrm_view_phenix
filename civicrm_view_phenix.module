@@ -59,12 +59,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
         }
         $variables['output'] = ['#markup' => '<span class="content-fiche">  ' . $font_awesome_html . $current_value_name . ' &nbsp;'];
       }
-      //$variables['output']
     }
-
-
-
-
 
   //Page geographique
   if ($view->storage->id() == 'location_occasion_membres_associes_' && $view->current_display == 'liste_carte') {
@@ -355,14 +350,14 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
   }
 
   //old geographic page
-  if ($view->storage->get('id') == 'entreprise_localisation' && ($view->current_display == 'page_2'|| $view->current_display == 'page_3') ) {
+  if ($view->storage->get('id') == 'entreprise_localisation' && ($view->current_display == 'page_2') ) {
     $view->setOffset(0);
     $view->getPager()->setItemsPerPage(400);
   }
   if ($view->storage->get('id') == 'entreprise_localisation' && ( $view->current_display == 'page_3') ) {
     $letter_alphabet = $request->query->get('letter');
     if ($letter_alphabet) {
-      $custom_service->addWhereQuery ($query,   'j%', 'civicrm_contact_civicrm_address', 'organization_name', 'like');
+      $custom_service->addWhereQuery ($query,   $letter_alphabet . '%', 'civicrm_contact_civicrm_address', 'organization_name', 'like');
     }
   }
 
@@ -377,13 +372,18 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
 
 
 
-  //Page géographique filter
-  if (($view->storage->get('id') == 'entreprise_localisation' && $view->current_display == 'block_7') || ($view->storage->get('id') == 'entreprise_localisation' && $view->current_display == 'page_3')) {
-
+    $contacts_who_are_in_dynamic_group = \Civi\Api4\Contact::get()
+     ->addSelect('id')
+     ->addWhere('groups', 'IN', [ViewService::TOUT_MEMBRE_ACTUEL_ID])
+     ->execute()->column('id');
     $req_company_name = $request->get('organization_name');
     $req_by_region = $request->get('state_province_id');
     $req_by_department = $request->get('filter_by_deprtmt');
     $req_city = $request->get('city');
+
+  //Page géographique filter
+  if (($view->storage->get('id') == 'entreprise_localisation' && $view->current_display == 'block_7')) {
+
 
     //Filtrer par agence
     // $custom_service->addWhereQuery ($query, 'Cible', 'civicrm_contact_civicrm_address', 'contact_sub_type', '=');//TODO FILTER
@@ -393,6 +393,25 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
     if ($req_company_name  || $req_by_region || $req_by_department) {
 
     }
+
+   if ($contacts_who_are_in_dynamic_group) {
+     $custom_service->addWhereQuery ($query,   $contacts_who_are_in_dynamic_group, 'civicrm_contact_civicrm_address  ', 'id', 'IN');
+   }
+
+
+   //Join table civicrm_membership filter by member Associé
+   $definition = [
+    'table' => 'civicrm_membership',
+    'field' => 'contact_id',
+    'left_table' => 'civicrm_contact_civicrm_address',
+    'left_field' => 'id',
+  ];
+  $join = Drupal::service('plugin.manager.views.join')->createInstance('standard', $definition);
+  $query->addRelationship('civicrm_contact_civicrm_address', $join,'civicrm_contact_civicrm_address');
+
+ $custom_service->joinTable($query, 'civicrm_contact_civicrm_address', 'civicrm_group_contact', 'civicrm_group_contact_alias', 'contact_id', 'id' );
+
+ $custom_service->addWhereQuery ($query,   [1, 2, 3, 4], 'civicrm_contact_civicrm_address_1 ', 'membership_type_id', 'IN');
 
     // //Filtrer par type de contact organisation
      $custom_service->addWhereQuery ($query, 'Organization', 'civicrm_contact_civicrm_address', 'contact_type', '=');
@@ -425,16 +444,60 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
       $view->getPager()->setItemsPerPage(ViewService::PAGE_GEOGRAPHIC_LIMIT);
     }
 
+
+  }
+
+  //Page geographique -> carte -> Custom query after removing all relation in view interface
+  if ($view->storage->get('id') == 'entreprise_localisation' && $view->current_display == 'page_3') {
+
+    //Join tables filter
+    $custom_service->joinTable($query, 'civicrm_address', 'civicrm_contact', 'civicrm_contact', 'id', 'contact_id') ;
+    $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_phone', 'civicrm_phone', 'contact_id', 'id') ;
+    $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_entity_tag', 'civicrm_entity_tag', 'entity_id', 'id') ;
+    $custom_service->joinTable($query, 'civicrm_entity_tag', 'civicrm_tag', 'civicrm_tag', 'id', 'tag_id') ;
+    $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_relationship', 'civicrm_relationship', 'contact_id_a', 'id') ;
+    $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_membership', 'civicrm_membership', 'contact_id', 'id') ;
+    $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_group_contact', 'civicrm_group_contact', 'contact_id', 'id') ;
+
+    $custom_service->addWhereQuery ($query,   [1, 2, 3, 4], 'civicrm_membership', 'membership_type_id', 'IN');
+    $custom_service->addWhereQuery ($query, 'Organization', 'civicrm_contact', 'contact_type', '=');
+    $custom_service->addWhereQuery ($query, '1', 'civicrm_phone', 'is_primary', '=');
+    $custom_service->addWhereQuery ($query, '1', 'civicrm_address', 'is_primary', '=');
+    $custom_service->addWhereQuery ($query, '', 'civicrm_address', 'geo_code_1', 'IS NOT NULL');  //latitude is not null
+    $custom_service->addWhereQuery ($query, '', 'civicrm_address', 'city', 'IS NOT NULL'); // Ville pas vide
+    $custom_service->addWhereQuery ($query, '0', 'civicrm_contact', 'is_deleted', '='); // entreprise qui n'est pas dans la corbeille
+    $custom_service->addWhereQuery ($query, '', 'civicrm_address', 'postal_code', '!='); //code postal pas vide
+
+    if ($contacts_who_are_in_dynamic_group) {
+      $custom_service->addWhereQuery ($query,   $contacts_who_are_in_dynamic_group, 'civicrm_contact  ', 'id', 'IN');
+    }
+
+
+    //all fitler
+    if ($req_by_department && ($req_by_department != 'All')) {
+      $custom_service->addWhereQuery ($query, "$req_by_department%", 'civicrm_address', 'postal_code', 'LIKE');
+    }
+
+    if ($req_city) {
+      $custom_service->addWhereQuery ($query, $req_city, 'civicrm_address', 'city', '=');
+    }
+
+
+    $view->getPager()->setItemsPerPage(3000); //set limit
   }
 
   $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
   if ($view->storage->get('id') == 'location_occasion_membres_associes_' && $view->current_display == 'liste_carte') {
 
+    if ($req_city) {
+      $custom_service->addWhereQuery ($query, $req_city, 'contact_id_civicrm_contact', 'city', '=');
+    }
+
     //where postal code is not null
     $custom_service->addWhereQuery ($query,   '', 'contact_id_civicrm_contact', 'postal_code', '!=');
 
     $get_query = $request->query;
-    if (!empty($get_query->get('filter_by_deprtmt'))) {
+    if (!empty($get_query->get('filter_by_deprtmt') && $get_query->get('filter_by_deprtmt') != 'All')) {
       $departmentId = $get_query->get('filter_by_deprtmt');
       $departments = \Drupal::database()->query("SELECT adr.postal_code  FROM civicrm_address as adr LEFT JOIN civicrm_contact as c on c.id = adr.contact_id WHERE
       c.contact_type = 'Organization' and

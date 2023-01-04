@@ -1,5 +1,5 @@
 name: 'civicrm view phenix'
 type: module
-description: 'Alter view behavior'
+description: 'Annuaire DLR uniquement, Alter view behavior'
 core_version_requirement: '^8 || ^9'
 package: 'Custom'

@@ -28,14 +28,16 @@
       });
 
       //Page location
-      if (queryString && !queryString.includes('materiel_location_new')) {
-        let matches = queryString.match(/materiel_location=[0-9]+/);
+      if(window.location.href.indexOf('/annuaire/location') > -1) {
+        if (queryString && !queryString.includes('materiel_location_new')) {
+          let matches = queryString.match(/materiel_location=[0-9]+/);
             let defaultValueFilterSubFamily = matches[0].split('=')[1];
 
             let allValuesJson = $('.all-data-subfamily').attr('data-subfamily');
             let allValues = JSON.parse(allValuesJson);
             let valueLabel = allValues[defaultValueFilterSubFamily];
             jQuery('.filter-by-subfamily').val(valueLabel + '(' + defaultValueFilterSubFamily + ')' );
+        }
       }
 
     }

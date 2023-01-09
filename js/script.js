@@ -381,7 +381,6 @@
 
   Drupal.Leaflet.prototype.create_point = function(marker) {
     let self = this;
-    console.log(marker.lat, marker.lon, ' loading..')
 
     let latLng = new L.LatLng(marker.lat, marker.lon);
     self.bounds.push(latLng);
@@ -434,24 +433,20 @@
         //do more stuff here
       });
 
-    if (marker.icon) {
-      //check if address id is a "cible"
-      /* $.ajax({
-        url: '/annuaire/geographique/check-company-type',
-        type: "POST",
-        data: {markerId: id},
-        success: (successResult, val, ee) => {
-          //this._popup.setContent('')
-          console.log(' RESULT SUCCESS')
-        },
-        error: function(error) {
-          console.log(error, 'ERROR')
-        }
-      }); */
+      currentQueryString = window.location.search
+      let isAgenceProfil = currentQueryString.includes('agenceId=');
+      var currentAgenceId = '';
+      if (isAgenceProfil) {
+        const urlParams = new URLSearchParams(currentQueryString);
+        currentAgenceId = urlParams.get('agenceId');
+      }
 
-      // if (markerId == 10449) {
-        // marker.icon.iconUrl = RED_MARKER_PATH;
-      // }
+      if (marker.icon) {
+        if (marker.entity_id == currentAgenceId) {
+          marker.icon.iconUrl = RED_MARKER_PATH
+        }
+
+
       if (marker.icon.iconType && marker.icon.iconType === 'html' && marker.icon.html) {
         let icon = self.create_divicon(marker.icon);
         lMarker.setIcon(icon);

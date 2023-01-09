@@ -14,7 +14,8 @@ class ViewService {
   protected $currentUser;
 
   const PAGE_GEOGRAPHIC_LIMIT = 900;
-  const TOUT_MEMBRE_ACTUEL_ID = 195;
+  const GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_ET_AGENCES = 195;
+  const GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT = 142;
 
   /**
    * CustomService constructor.
@@ -229,6 +230,14 @@ class ViewService {
     ->execute()->first();
   }
 
+
+  public function getAllContactIDInGroupDyanmicByGroupID ($groupId) {
+    return \Civi\Api4\Contact::get()
+    ->addSelect('id')
+    ->addWhere('groups', 'IN', [$groupId])
+    ->execute()->column('id');
+  }
+
   /**
    * Undocumented function
    *
@@ -252,6 +261,128 @@ class ViewService {
 
   }
 
+  public function innerJoinTable ($query, $currentTable, $targetTable, $tableAlias, $foreign_id, $id) {
+    $definition = [
+      'type' => 'INNER',
+      'table' => $targetTable,
+      'field' => $foreign_id,
+      'left_table' => $currentTable,
+      'left_field' => $id,
+    ];
+    $join = \Drupal::service('plugin.manager.views.join')->createInstance('standard', $definition);
+    return $query->addRelationship($tableAlias, $join, $currentTable);
+
+  }
+
+  public function isDirigeantVisible ($idContact) {
+    return \Civi\Api4\Contact::get()
+    ->addSelect('indiviual_dlr.contact_visible_site')
+    ->addWhere('id', '=', $idContact)
+    ->execute()->column('indiviual_dlr.contact_visible_site');
+  }
+
+
+
+  /**
+   * Get all contact type cible /
+   */
+  public function getContactIdByBasicCommonGenericQueryFilters () {
+    $contacts_cible_who_are_in_dynamic_group = $this->getAllContactIDInGroupDyanmicByGroupID(ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT);
+    $contacts_cible_who_are_in_dynamic_group = implode (',', $contacts_cible_who_are_in_dynamic_group);
+    $string_query = 'SELECT C.id from civicrm_contact as C
+    inner join civicrm_address as A ON A.contact_id = C.id
+    inner join civicrm_phone as P ON P.contact_id = C.id
+    inner join civicrm_membership as M ON M.contact_id = C.id
+    inner join civicrm_value_phx_org_annuaireenligne AN ON C.id = AN.entity_id
+    WHERE contact_type = \'Organization\'
+    AND contact_sub_type = \'Cible\'
+    AND A.is_primary = 1
+    AND P.is_primary = 1
+    AND  A.city IS NOT NULL
+    AND  C.is_deleted = 0
+    AND A.postal_code IS NOT NULL
+    AND A.geo_code_1 IS NOT NULL
+    AND M.membership_type_id IN (1, 2, 3, 5)
+    AND AN.org_annuaireenligne_DLR = 1
+    AND C.id IN (' . $contacts_cible_who_are_in_dynamic_group . ')';
+
+
+    $allContactId =  \Drupal::database()->query($string_query)->fetchAll();
+    return array_column($allContactId, 'id');
+  }
+
+
+
+  /**
+   * Get all contact type cible /
+   */
+  public function getIdContactAlphabetiqueForVerification () {
+    $contacts_cible_who_are_in_dynamic_group = $this->getAllContactIDInGroupDyanmicByGroupID(ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT);
+    $contacts_cible_who_are_in_dynamic_group = implode (',', $contacts_cible_who_are_in_dynamic_group);
+    $string_query = 'SELECT C.id from civicrm_contact as C
+    inner join civicrm_address as A ON A.contact_id = C.id
+    inner join civicrm_phone as P ON P.contact_id = C.id
+    inner join civicrm_membership as M ON M.contact_id = C.id
+    inner join civicrm_value_phx_org_annuaireenligne AN ON C.id = AN.entity_id
+    WHERE contact_type = \'Organization\'
+    AND C.contact_sub_type = \'Cible\'
+    AND A.is_primary = 1
+    AND P.is_primary = 1
+    AND  A.city IS NOT NULL
+    AND  C.is_deleted = 0
+    AND A.postal_code IS NOT NULL
+    AND A.geo_code_1 IS NOT NULL
+    AND M.membership_type_id IN (1)
+    AND AN.org_annuaireenligne_DLR = 1
+    AND C.id IN (' . $contacts_cible_who_are_in_dynamic_group . ')';
+
+
+    $allContactId =  \Drupal::database()->query($string_query)->fetchAll();
+    return array_column($allContactId, 'id');
+  }
+
+  public function geographiqueGetAllAgencesLinkedWithCibleDlr () {
+    //Les agences liées à des cibles DLR membres actuels
+    $contacts_cible_who_are_in_dynamic_group = $this->getAllContactIDInGroupDyanmicByGroupID(ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT);
+    $contacts_cible_who_are_in_dynamic_group = implode (',', $contacts_cible_who_are_in_dynamic_group);
+
+    $all_agence_id_linked_whith_cible_dlr = \Drupal::database()->query(
+    'select R.contact_id_b from civicrm_contact as C left join civicrm_relationship as R ON  C.id = R.contact_id_b
+      where  contact_sub_type = \'Agence\' and R.contact_id_a IN ( ' . $contacts_cible_who_are_in_dynamic_group . ')'
+      )->fetchAll();
+    $ids =  array_column($all_agence_id_linked_whith_cible_dlr, 'contact_id_b');
+    $ids = implode(', ', $ids);
+
+    $string_query = 'SELECT C.id from civicrm_contact as C
+    inner join civicrm_membership as M ON M.contact_id = C.id
+    inner join civicrm_value_phx_org_annuaireenligne AN ON C.id = AN.entity_id
+
+    inner join civicrm_address as A ON A.contact_id = C.id
+    inner join civicrm_phone as P ON P.contact_id = C.id
+
+    WHERE contact_type = \'Organization\'
+    AND C.contact_sub_type = \'Agence\'
+    AND AN.org_annuaireenligne_DLR = 1
+    AND A.is_primary = 1
+    AND P.is_primary = 1
+    AND A.city IS NOT NULL
+    AND C.is_deleted = 0
+    AND A.postal_code IS NOT NULL
+    AND A.geo_code_1 IS NOT NULL
+
+    AND M.membership_type_id IN (1, 2, 3, 5)
+
+    AND C.id IN (' . $ids . ')';
+
+    $allContactId =  \Drupal::database()->query($string_query)->fetchAll();
+    return array_column($allContactId, 'id');
+
+  }
+
+  public function CibleMembreActuel () {
+    $contacts_cible_who_are_in_dynamic_group = $this->getAllContactIDInGroupDyanmicByGroupID(ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT);
+    return $contacts_cible_who_are_in_dynamic_group;
+  }
 
 /**
  * Undocumented function

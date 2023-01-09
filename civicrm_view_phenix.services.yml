@@ -2,3 +2,6 @@ services:
   civicrm_view_phenix.view_services:
     class: Drupal\civicrm_view_phenix\ViewService
     arguments: ['@current_user']
+
+  civicrm_view_phenix.view_query_services:
+    class: Drupal\civicrm_view_phenix\ViewServiceQuery

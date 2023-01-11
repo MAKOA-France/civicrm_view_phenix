@@ -4,7 +4,12 @@
   Drupal.behaviors.leaflet = {
     attach: function(context, settings) {
 
-    var queryString = window.location.search;
+      var queryString = window.location.search;
+
+      var latCenter = '';
+      var lonCenter = '';
+    //Display label SE logo
+    displayLabelSElogo();
 
     //Inverser l'affichage de la carte et la video  (fiche entreprise)
     jQuery('.video-content-fiche').insertBefore('.testation2 .views-element-container');
@@ -49,6 +54,7 @@
     }
 
     //page geographique
+    if (jQuery('[value="Rechercher"]').length > 0) {
     jQuery('[value="Rechercher"]').once('leaflet').on('click', function() {
       let dep = $('[name="filter_by_deprtmt"]').val()
       if (dep == 'none') {
@@ -65,10 +71,10 @@
       }
 
     })
+  }
+  $(document).on('ajaxSuccess',function( event, xhr, settings){
 
-    $(document).on('ajaxSuccess',function( event, xhr, settings){
-
-    });
+  });
 
     //By default selected field select (hidden) filter by marque
     let matchBrandFilter = queryString.match(/marque_nom=[0-9]+/ig);
@@ -433,17 +439,30 @@
         //do more stuff here
       });
 
+
       currentQueryString = window.location.search
       let isAgenceProfil = currentQueryString.includes('agenceId=');
+      let isCibleProfil = currentQueryString.includes('addressId=');
       var currentAgenceId = '';
+
+      //FOR AGENCE
       if (isAgenceProfil) {
         const urlParams = new URLSearchParams(currentQueryString);
         currentAgenceId = urlParams.get('agenceId');
       }
 
+
+      //FOR CIBLE
+      if (isCibleProfil) {
+        const urlParams = new URLSearchParams(currentQueryString);
+        currentAgenceId = urlParams.get('addressId');
+      }
       if (marker.icon) {
-        if (marker.entity_id == currentAgenceId) {
+        if (marker.entity_id == currentAgenceId) {// if it's the current agence
           marker.icon.iconUrl = RED_MARKER_PATH
+          //Agence latitude and longitude
+          latCenter = marker.lat;
+          lonCenter = marker.lon;
         }
 
 
@@ -649,6 +668,8 @@
       }
 
 
+      console.log('loading...', latCenter)
+
        Drupal.Leaflet[mapid].start_zoom = start_zoom;
         Drupal.Leaflet[mapid].lMap.setZoom(7);
        Drupal.Leaflet[mapid].start_center = start_center;
@@ -659,6 +680,15 @@
       // Set the map start zoom and center.
        Drupal.Leaflet[mapid].lMap.setView(start_center, 6);
     }
+
+    if ($('.annuaire-detail-text').length > 0 ) {
+      start_center.lat = latCenter;
+      start_center.lng = lonCenter;
+      // Set the map start zoom and center.
+      Drupal.Leaflet[mapid].lMap.setView(start_center, 15);
+      Drupal.Leaflet[mapid].lMap.setZoom(12);
+    }
+
 
   };
   };
@@ -710,6 +740,28 @@
       };
       return control;
     };
+  }
+
+  function displayLabelSElogo () {
+    var statuts = document.querySelectorAll(".views-field-nom-certification");
+    for (var i = 0; i < statuts.length; i++) {
+        var t = statuts[i].textContent.split(',');
+        var statutsArray = statuts[i].textContent.split(',');
+
+
+        for (var b = 0; b < statutsArray.length; b++) {
+          var itemToString = statutsArray[b];
+
+            if (itemToString == 6) {
+                statuts[i].innerHTML = '<img class="img-label-se" src=\"https://dlr-guide.dev.makoa.net/files/styles/thumbnail/public/2022-07/logo-pages-se_1.png">'
+            }
+            // else if(i != 0)
+            else if(itemToString != 0)
+            {
+              statuts[i].innerHTML = "";
+            }
+        }
+    }
   }
 
   })(jQuery, Drupal, drupalSettings);

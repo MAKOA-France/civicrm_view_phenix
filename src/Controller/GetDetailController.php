@@ -21,12 +21,14 @@ class GetDetailController
     $address_id = $request->get('idAddress');
     $database = \Drupal::database();
     $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
+    $custom_query_service = \Drupal::service('civicrm_view_phenix.view_query_services');
     $build = '';
     $id = $database->query("SELECT contact_id
       FROM civicrm_address as C
       WHERE C.id = " . $address_id);
 
     $id = $id->fetch();
+    $marker_current_contact_id = $id->contact_id;
 
       if ($id) {
         $id = $id->contact_id;
@@ -51,6 +53,16 @@ class GetDetailController
 
         $allInfoAboutCompany = $allInfoAboutCompany->fetch();
         $dirigeant = $custom_service->getDirigeant($id);
+
+
+        //Adding parameters
+        $isContactAgence = $custom_query_service->isContactAgence ($marker_current_contact_id);
+        if ($isContactAgence) {
+          $paramsToAppend = '?agenceId=' . $address_id;
+        }else {
+          $paramsToAppend = '?addressId=' . $address_id;
+        }
+
         if ($allInfoAboutCompany) {
 
           $build .= '<div class="tooltip-map" id="' . $id . '-tooltip">
@@ -60,7 +72,7 @@ class GetDetailController
           <li>'. $allInfoAboutCompany->postal_code . '  ' . $allInfoAboutCompany->city . '</li>
           <li>' . $allInfoAboutCompany->phone . '</li>
           <li>' . $dirigeant . '</li>
-          <li><a target="_blank" href="/annuaire/details/'.$id.'"> > Voir la fiche</a></li>
+          <li><a target="_blank" href="/annuaire/details/' . $id . $paramsToAppend .'"> > Voir la fiche</a></li>
           </ul>
           </div>';
         }

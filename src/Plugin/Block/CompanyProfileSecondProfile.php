@@ -115,9 +115,29 @@ class CompanyProfileSecondProfile  extends BlockBase  {
       $mainActivityLabelVal = $mainActivityLabel->first()['contact_id.org_dlr.activiteprincipale:label'];
       $mainActivityLabelVal = str_replace('Professionnel DLR : ', '', $mainActivityLabelVal);
 
-      $mainActivity = $mainActivityLabel->first() ? '
+      //Check if company is linked with label SE or not
+      $tagHtmlForLabelSE = '';
+      $isCompanyLabelSE = $this->getQueryService()->isCompanyLabelSE($id);
+      if (!empty ($isCompanyLabelSE) && in_array(6, $isCompanyLabelSE)) {
+        $tagHtmlForLabelSE = '
+        <span class="company-profile-label-se">Label SE+</span>
+        <img class="company-profile-img-label-se" src="https://dlr-guide.dev.makoa.net/files/styles/thumbnail/public/2022-07/logo-pages-se_1.png">
+        ';
+      }
+
+      $isMembreAssocie = $this->getQueryService()->isContactMemberAssocie ($id);
+      if ($isMembreAssocie) {
+        $tagHtmlForLabelSE = '
+        <span class="company-profile-membre-associe">Membre Associé</span>
+        <img src="/files/styles/thumbnail/public/2022-07/logoMA.png?itok=vURbgtIU">
+               ';
+      }
+
+
+      $mainActivity = $mainActivityLabel->first() ? '<div class="company-profile-SE">
       <strong class="views-label views-label-materiel-occasion title-fiche">Activité principale : </strong>
-      <p class="content-fiche"> ' .  $mainActivityLabelVal .  ' </p>' : '';
+      ' . $tagHtmlForLabelSE . '
+      <p class="content-fiche"> ' .  $mainActivityLabelVal .  ' </p>' : '</div>';
 
       $htmlDescription = strlen($description) > 5 ? ' <strong class="views-label views-label-marque-nom title-fiche">Descriptif de l\'entreprise : </strong>
         <div class="content-fiche company-description">' . $description . '</div><br>' : '';
@@ -137,6 +157,10 @@ class CompanyProfileSecondProfile  extends BlockBase  {
       '#markup' => $html,
       ''
     ];
+  }
+
+  private function getQueryService () {
+    return \Drupal::service('civicrm_view_phenix.view_query_services');
   }
 
   /**

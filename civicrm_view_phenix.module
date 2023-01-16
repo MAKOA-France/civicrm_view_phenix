@@ -53,7 +53,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
       }
 
       $value = $field->getValue($row);
-      $current_value_name = $variables['output']->__toString();
+      $current_value_name = is_string($variables['output']) ? $variables['output'] :  $variables['output']->__toString();
 
       //Override link
       if (!empty($get_contact_type)) {
@@ -62,7 +62,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
         $isAgence = $get_contact_type['contact_sub_type'][0] == 'Agence';
         $value = $field->getValue($row);
-        $current_value_name = $variables['output']->__toString();
+        $current_value_name = is_string($variables['output']) ? $variables['output'] :  $variables['output']->__toString();
 
         }
 

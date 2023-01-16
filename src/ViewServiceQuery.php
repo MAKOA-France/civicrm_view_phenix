@@ -24,6 +24,13 @@ class ViewServiceQuery {
       ->execute()->first()['contact_id'];
   }
 
+  public function isCompanyLabelSE ($contactId) {
+    return $certificationses = \Civi\Api4\CustomValue::get('Certifications')
+      ->addSelect('nom_certification')
+      ->addWhere('entity_id', '=', $contactId)
+      ->execute()->column('nom_certification');
+  }
+
   /**
    * Get street address / city / postal code / email /phone number BY address Id
    *
@@ -91,5 +98,19 @@ class ViewServiceQuery {
     ->execute();
   }
 
+  public function isContactMemberAssocie ($contactID) {
+    $string_query = 'select id from civicrm_membership where membership_type_id IN (2, 3, 4) and contact_id = ' . $contactID;
+    return \Drupal::database()->query($string_query)->fetch();
+  }
+
+  public function isContactAgence ($contactID) {
+    return /* \Civi\Api4\Contact::get()
+      ->addSelect('id')
+      ->addWhere('contact_sub_type', '=', 'Agence')
+      ->addWhere('id', '=', $contactID)
+      ->execute(); */
+
+      \Drupal::database()->query("select id from civicrm_contact where contact_sub_type = 'Agence' and  id = " . $contactID)->fetch();
+  }
 
 }

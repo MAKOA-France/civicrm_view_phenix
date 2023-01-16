@@ -668,7 +668,6 @@
       }
 
 
-      console.log('loading...', latCenter)
 
        Drupal.Leaflet[mapid].start_zoom = start_zoom;
         Drupal.Leaflet[mapid].lMap.setZoom(7);
@@ -682,11 +681,12 @@
     }
 
     if ($('.annuaire-detail-text').length > 0 ) {
-      start_center.lat = latCenter;
-      start_center.lng = lonCenter;
+      // start_center.lat = latCenter;
+      // start_center.lng = lonCenter;
       // Set the map start zoom and center.
-      Drupal.Leaflet[mapid].lMap.setView(start_center, 15);
-      Drupal.Leaflet[mapid].lMap.setZoom(12);
+     // Drupal.Leaflet[mapid].lMap.setView(start_center, 15);
+      Drupal.Leaflet[mapid].lMap.setZoom(7);
+
     }
 
 

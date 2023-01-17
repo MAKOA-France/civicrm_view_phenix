@@ -284,7 +284,7 @@ class ViewService {
 
 
   /**
-   * Get all contact type cible /
+   * 
    */
   public function getContactIdByBasicCommonGenericQueryFilters () {
     $contacts_cible_who_are_in_dynamic_group = $this->getAllContactIDInGroupDyanmicByGroupID(ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT);
@@ -314,7 +314,7 @@ class ViewService {
 
 
   /**
-   * Get all contact type cible /
+   * Get Contact Alphabetic
    */
   public function getIdContactAlphabetiqueForVerification () {
     $contacts_cible_who_are_in_dynamic_group = $this->getAllContactIDInGroupDyanmicByGroupID(ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT);

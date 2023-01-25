@@ -23,7 +23,7 @@ class CompanyProfileSecondProfile  extends BlockBase  {
    * {@inheritdoc}
    */
   public function build() {
-
+    \Drupal::service('cache.render')->invalidateAll();
     $id = \Drupal::request()->get('arg_0');
     $database = \Drupal::database();
 
@@ -133,6 +133,9 @@ class CompanyProfileSecondProfile  extends BlockBase  {
                ';
       }
 
+      //Get Matériels d'occasion
+      $materiel_occasion_label = $this->getQueryService()->getMaterielOccasion($id);
+
 
       $mainActivity = $mainActivityLabel->first() ? '<div class="company-profile-SE">
       <strong class="views-label views-label-materiel-occasion title-fiche">Activité principale : </strong>
@@ -142,20 +145,23 @@ class CompanyProfileSecondProfile  extends BlockBase  {
       $htmlDescription = strlen($description) > 5 ? ' <strong class="views-label views-label-marque-nom title-fiche">Descriptif de l\'entreprise : </strong>
         <div class="content-fiche company-description">' . $description . '</div><br>' : '';
 
+      $materiel_occasion_html = $materiel_occasion_label ? ' <strong class="views-label views-label-marque-nom title-fiche">Matériels d\'occasion : </strong>
+        <div class="content-fiche company-description">' . $materiel_occasion_label . '</div>' : '';
+
       $html = '<div class="second-column company-profile-block">
         ' . $mainActivity . $htmlDescription
          . $materielHtml . '
 
         ' . $brandLabel . '
         ' . $distributedBrand . '
-        ' . $materielLocation . '
+        ' . $materielLocation . $materiel_occasion_html . '
       </div>';
 
-
+      \Drupal::service('page_cache_kill_switch')->trigger();
 
     return [
       '#markup' => $html,
-      ''
+      '#cache' => ['max-age' => 0],
     ];
   }
 

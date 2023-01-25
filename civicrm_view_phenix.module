@@ -81,10 +81,11 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
   //Page geographique
   if ($view->storage->id() == 'location_occasion_membres_associes_' && $view->current_display == 'liste_carte') {
-    if ($field->field == 'organization_name') {
+    if ($field->field == 'organization_name' || $field->field == 'legal_name' ) {
       $current_company_id = $variables['row']->id;
       $get_contact_type =  \Drupal::service('civicrm_view_phenix.view_services')->getContactTypeById ($current_company_id)->first();
       $font_awesome_html = '';
+
 
       $agence_icon = '<i class=\'far fa-building pr-12 \'></i>';
 
@@ -96,7 +97,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
       }
 
       $value = $field->getValue($row);
-      $current_value_name = $variables['output']->__toString();
+      $current_value_name = is_string($variables['output']) ? $variables['output'] : $variables['output']->__toString();
 
       //Override link
       if (!empty($get_contact_type)) {
@@ -105,7 +106,17 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
         $isAgence = $get_contact_type['contact_sub_type'][0] == 'Agence';
         $value = $field->getValue($row);
-        $current_value_name = $variables['output']->__toString();
+        $current_value_name = is_string($variables['output']) ? $variables['output'] : $variables['output']->__toString();
+
+
+        //If legal_name is empty we get organization_name
+        if (!$variables['output']) {
+          $organization_name_label = $custom_query_service->getContactOrganizationName($current_company_id)[0];
+          $current_value_name = '<a href="/annuaire/details/' . $current_company_id . '" class="compagny_name">' . $organization_name_label . '</a>';
+        }
+
+
+
          if ($isAgence) {
           //Override link
           $idCibleLinkedWithThisAgence = $custom_service->getCompanyCibleByAgenceId($current_company_id);
@@ -121,7 +132,24 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
             $previous_value = $matches[0];
             $current_value_name = str_replace($current_company_id, $idCibleLinkedWithThisAgence[0] . '?agenceId=' . $addresseId, $current_value_name);
           }
+        }else {
+
+           //regex Todo refactoring
+           preg_match('/annuaire\/details\/[0-9]+/', $current_value_name, $matches);
+
+           if (!empty($matches)) {
+             $addresseId = \Civi\Api4\Address::get()
+               ->addSelect('id')
+               ->addWhere('contact_id', '=', $current_company_id)
+               ->execute()->first()['id'];
+             $previous_value = $matches[0];
+
+            $current_value_name = str_replace($current_company_id, $current_company_id . '?addressId=' . $addresseId, $current_value_name);
+
+          }
         }
+
+
         $variables['output'] = ['#markup' => '<span class="content-fiche">  ' . $font_awesome_html . $current_value_name . ' &nbsp;'];
       }
 
@@ -161,6 +189,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
       ' : '';
 
       $html_agence_info = '<div class="contact-agence-info">
+       <p class="agence-siege">Agence :</p>
       <p class="content-fiche  mb-0">' . $street_address . '</p>
       <span class="content-fiche  mb-0">' . $postal_code . '</span>
       <span class="content-fiche  mb-0">' . $city . '</span>
@@ -175,7 +204,9 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
 
     $valueLegalName = $field->getValue($row);
-    $variables['output'] = ['#markup' => '<div class="legal-name"> <p class="field-content fiche-legal-name"> ' . $valueLegalName . '</p></div>' . $html_agence_info];
+    $variables['output'] = ['#markup' => '
+    <a href="' . \Drupal::request()->server->get('HTTP_REFERER') . '" class="button button-go-back js-form-submit form-submit">Retour</a>
+    <div class="legal-name"> <p class="field-content fiche-legal-name"> ' . $valueLegalName . '</p></div>' . $html_agence_info];
   }
 
   if ($field->field == 'url') {
@@ -425,12 +456,12 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
     $custom_service->addWhereQuery ($query, 0, 'civicrm_contact', 'is_deleted', '=');
     $custom_service->addWhereQuery ($query, 'Organization', 'civicrm_contact', 'contact_type', '='); //contact type organization
     if ($view->current_display != 'block_membres_associes') {
-      $custom_service->addWhereQuery ($query, '1', 'contact_id_civicrm_contact_1', 'is_primary', '='); //telephone principale
+      // $custom_service->addWhereQuery ($query, '1', 'contact_id_civicrm_contact_1', 'is_primary', '='); //telephone principale
     }
-    $custom_service->addWhereQuery ($query, '1', 'contact_id_civicrm_contact', 'is_primary', '='); //adresse principal
+    // $custom_service->addWhereQuery ($query, '1', 'contact_id_civicrm_contact', 'is_primary', '='); //adresse principal
     $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'geo_code_1', 'IS NOT NULL');  //latitude is not null
-    $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'city', 'IS NOT NULL'); // Ville pas vide
-    $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'postal_code', '!='); // Code postal pas vide
+    // $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'city', 'IS NOT NULL'); // Ville pas vide
+    // $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'postal_code', '!='); // Code postal pas vide
     $custom_service->addWhereQuery ($query, 'Cible', 'civicrm_contact', 'contact_sub_type', '='); //Contact de type Cible
 
 
@@ -457,7 +488,23 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
       $column_to_be_filtered = 'phx_secteur_loueur';//Secteur Loueur In Oui
       break;
       case 'page_2': //Page Vente
-      $column_to_be_filtered = 'phx_secteur_distributeur';//Secteur Distributeur In Oui
+        $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_value_phx_secteur', 'civicrm_value_phx_secteur', 'entity_id', 'id') ;
+        $query->where[] =  [
+          'conditions' => [
+              [
+              'field' => 'civicrm_value_phx_secteur.phx_secteur_occasion',
+              'value' => '1',
+              'operator' => '=',
+              ],
+            [
+              'field' => 'civicrm_value_phx_secteur.phx_secteur_distributeur',
+              'value' => '1',
+              'operator' => '=',
+            ],
+          ],
+          'type' => 'OR',
+        ];
+
       break;
     }
 
@@ -485,6 +532,24 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
     }
 
 
+  }
+
+  $get_filter_secteurs = $request->query->all();;
+  if ($view->storage->get('id') == 'location_occasion_membres_associes_' && ($view->current_display == 'page_10_grue_tour') && $get_filter_secteurs) {
+    $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_value_phx_secteur', 'civicrm_value_phx_secteur', 'entity_id', 'id') ;
+    foreach($get_filter_secteurs as $get_filter_secteur) {
+      switch ($get_filter_secteur) {
+        case 'location':
+          $custom_service->addWhereQuery ($query, '1', 'civicrm_value_phx_secteur', 'phx_secteur_loueur', '=');
+          break;
+        case 'montage':
+          $custom_service->addWhereQuery ($query, '1', 'civicrm_value_phx_secteur', 'phx_secteur_distributeur', '=');
+          break;
+        case 'reparation':
+          $custom_service->addWhereQuery ($query, '1', 'civicrm_value_phx_secteur', 'phx_secteur_reparateur', '=');
+          break;
+      }
+    }
   }
 
 
@@ -593,23 +658,23 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
     // dump($all_agence_linked_whith_cible_dlr);
 
     //Join tables filter
-    $custom_service->joinTable($query, 'civicrm_address', 'civicrm_contact', 'civicrm_contact', 'id', 'contact_id') ;
-    $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_phone', 'civicrm_phone', 'contact_id', 'id') ;
-    $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_membership', 'civicrm_membership', 'contact_id', 'id') ;
-    $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_group_contact', 'civicrm_group_contact', 'contact_id', 'id') ;
-    $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_value_phx_org_annuaireenligne', 'civicrm_value_phx_org_annuaireenligne', 'entity_id', 'id') ;
+   // $custom_service->joinTable($query, 'civicrm_address', 'civicrm_contact', 'civicrm_contact', 'id', 'contact_id') ;
+    //$custom_service->joinTable($query, 'civicrm_contact', 'civicrm_phone', 'civicrm_phone', 'contact_id', 'id') ;
+    $custom_service->joinTable($query, 'civicrm_contact_civicrm_address', 'civicrm_membership', 'civicrm_membership', 'contact_id', 'id') ;
+    $custom_service->joinTable($query, 'civicrm_contact_civicrm_address', 'civicrm_group_contact', 'civicrm_group_contact', 'contact_id', 'id') ;
+    $custom_service->joinTable($query, 'civicrm_contact_civicrm_address', 'civicrm_value_phx_org_annuaireenligne', 'civicrm_value_phx_org_annuaireenligne', 'entity_id', 'id') ;
 
     //filter CIBLES  (but not agences) by membership status --> statut IN [en instance, courant, nouveau, délai de grace]
     $custom_service->addWhereQuery ($query,   [1, 2, 3, 4], 'civicrm_membership', 'membership_type_id', 'IN'); //filtrer par adhérents
 
-    $custom_service->addWhereQuery ($query, 'Organization', 'civicrm_contact', 'contact_type', '=');
-    $custom_service->addWhereQuery ($query, '1', 'civicrm_phone', 'is_primary', '='); //telephone principale
-    $custom_service->addWhereQuery ($query, '1', 'civicrm_address', 'is_primary', '='); //adresse principal
+    $custom_service->addWhereQuery ($query, 'Organization', 'civicrm_contact_civicrm_address', 'contact_type', '=');
+    // $custom_service->addWhereQuery ($query, '1', 'civicrm_phone', 'is_primary', '='); //telephone principale
+    // $custom_service->addWhereQuery ($query, '1', 'civicrm_address', 'is_primary', '='); //adresse principal
     $custom_service->addWhereQuery ($query, '', 'civicrm_address', 'geo_code_1', 'IS NOT NULL');  //latitude is not null
-    $custom_service->addWhereQuery ($query, '', 'civicrm_address', 'city', 'IS NOT NULL'); // Ville pas vide
-    $custom_service->addWhereQuery ($query, '', 'civicrm_address', 'postal_code', '!='); // Code postal pas vide
+     $custom_service->addWhereQuery ($query, '', 'civicrm_address', 'city', 'IS NOT NULL'); // Ville pas vide
+     $custom_service->addWhereQuery ($query, '', 'civicrm_address', 'postal_code', '!='); // Code postal pas vide
    // $custom_service->addWhereQuery ($query, 1, 'civicrm_value_phx_org_annuaireenligne', 'org_annuaireenligne_DLR', '=');
-    $custom_service->addWhereQuery ($query, 0, 'civicrm_contact', 'is_deleted', '=');
+    $custom_service->addWhereQuery ($query, 0, 'civicrm_contact_civicrm_address', 'is_deleted', '=');
     //TODO ajouter filtre par status
 
     //alter query champ Annuaire en ligne = OUI  Pour les organisations
@@ -633,13 +698,27 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
 
     if ($all_agence_id_linked_whith_cible_dlr) {
         $all_agence_id_linked_whith_cible_dlr = array_unique(array_merge($all_agence_id_linked_whith_cible_dlr, $id_contact_cibles_already_filtered), SORT_REGULAR);
-        $custom_service->addWhereQuery ($query, $all_agence_id_linked_whith_cible_dlr, 'civicrm_contact', 'id', 'IN');
+        $custom_service->addWhereQuery ($query, $all_agence_id_linked_whith_cible_dlr, 'civicrm_contact_civicrm_address', 'id', 'IN');
     }
 
 
-    //all fitler
+    //filter by departement by select multiple
     if ($req_by_department && ($req_by_department != 'All')) {
-      $custom_service->addWhereQuery ($query, "$req_by_department%", 'civicrm_address', 'postal_code', 'LIKE');
+
+      $conditions = [];
+      foreach ($req_by_department as $department_id) {
+        $conditions[] = [
+            'field' => 'civicrm_address.postal_code',
+            'value' => ''. trim($department_id) .'%',
+            'operator' => 'LIKE',
+        ];
+      }
+
+
+      $query->where[] =  [
+        'conditions' => $conditions,
+        'type' => 'OR',
+      ];
     }
 
     if ($req_city) {
@@ -647,7 +726,7 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
     }
 
     if ($req_company_name) {
-      $custom_service->addWhereQuery ($query, "%$req_company_name%", 'civicrm_contact', 'organization_name', 'LIKE');
+      $custom_service->addWhereQuery ($query, "%$req_company_name%", 'civicrm_contact_civicrm_address', 'organization_name', 'LIKE');
     }
 
 
@@ -664,13 +743,14 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
     }
 
     $get_query = $request->query;
+
     if (!empty($get_query->get('filter_by_deprtmt') && $get_query->get('filter_by_deprtmt') != 'All')) {
-      $departmentId = $get_query->get('filter_by_deprtmt');
-      $departments = \Drupal::database()->query("SELECT adr.postal_code  FROM civicrm_address as adr LEFT JOIN civicrm_contact as c on c.id = adr.contact_id WHERE
+      $department_ids = $get_query->get('filter_by_deprtmt');
+      /* $departments = \Drupal::database()->query("SELECT adr.postal_code  FROM civicrm_address as adr LEFT JOIN civicrm_contact as c on c.id = adr.contact_id WHERE
       c.contact_type = 'Organization' and
-    adr.postal_code LIKE '". $departmentId . "%'");
-      $departments = $departments->fetchAll();
-       $query->where[] =  array(
+      adr.postal_code LIKE '". $departmentId . "%'");
+      $departments = $departments->fetchAll(); */
+      /*  $query->where[] =  array(
          'conditions' => array(
            array(
              'field' => 'contact_id_civicrm_contact.postal_code',
@@ -679,8 +759,24 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
               ),
             ),
             'type' => 'AND',
-          );
-        }
+          ); */
+
+      //filter by departement by select multiple
+      $conditions = [];
+      foreach ($department_ids as $department_id) {
+        $conditions[] = [
+            'field' => 'contact_id_civicrm_contact.postal_code',
+            'value' => ''. trim($department_id) .'%',
+            'operator' => 'LIKE',
+        ];
+      }
+
+      $query->where[] =  [
+        'conditions' => $conditions,
+        'type' => 'OR',
+      ];
+
+    }
 
 
 
@@ -707,8 +803,6 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
     $custom_service->addWhereQuery ($query,   [1, 2, 3, 4], 'civicrm_contact_1', 'membership_type_id', 'IN'); //filtrer par adhérents
 
     $custom_service->addWhereQuery ($query, 'Organization', 'civicrm_contact', 'contact_type', '='); // type de contact
-    $custom_service->addWhereQuery ($query, '1', 'contact_id_civicrm_contact_1', 'is_primary', '='); //Téléphone principale = true
-    $custom_service->addWhereQuery ($query, '1', 'contact_id_civicrm_contact', 'is_primary', '='); //adresse principale = true
     $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'geo_code_1', 'IS NOT NULL');  //latitude is not null
     $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'city', 'IS NOT NULL'); // Ville pas vide
     $custom_service->addWhereQuery ($query, '0', 'civicrm_contact', 'is_deleted', '='); // entreprise qui n'est pas dans la corbeille
@@ -746,12 +840,12 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
     $custom_service->addWhereQuery ($query,   [1], 'civicrm_membership', 'membership_type_id', 'IN'); //filtrer par adhérents
 
     $custom_service->addWhereQuery ($query, 'Organization', 'civicrm_contact', 'contact_type', '='); // contact de type "organization"
-    $custom_service->addWhereQuery ($query, '0', 'civicrm_contact', 'is_deleted', '='); // entreprise qui n'est pas dans la corbeille
-    $custom_service->addWhereQuery ($query, '1', 'contact_id_civicrm_contact_1', 'is_primary', '='); //Téléphone principale = true
-    $custom_service->addWhereQuery ($query, '1', 'contact_id_civicrm_contact', 'is_primary', '='); //adresse principale = true
     $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'geo_code_1', 'IS NOT NULL');  //latitude is not null
-    $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'city', 'IS NOT NULL'); // Ville pas vide
-    $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'postal_code', '!='); // Code postal pas vide
+    $custom_service->addWhereQuery ($query, '0', 'civicrm_contact', 'is_deleted', '='); // entreprise qui n'est pas dans la corbeille
+    // $custom_service->addWhereQuery ($query, '1', 'contact_id_civicrm_contact_1', 'is_primary', '='); //Téléphone principale = true
+    // $custom_service->addWhereQuery ($query, '1', 'contact_id_civicrm_contact', 'is_primary', '='); //adresse principale = true
+    // $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'city', 'IS NOT NULL'); // Ville pas vide
+    // $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'postal_code', '!='); // Code postal pas vide
     $custom_service->addWhereQuery ($query, 'Cible', 'civicrm_contact', 'contact_sub_type', '='); //type de contact 'Cible'
     $custom_service->addWhereQuery ($query, 1, 'civicrm_value_phx_org_annuaireenligne', 'org_annuaireenligne_DLR', '='); //Annuaire en ligne
     $idscontact = $custom_service->getAllContactIDInGroupDyanmicByGroupID(ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT);
@@ -925,7 +1019,7 @@ function civicrm_view_phenix_preprocess_pager(&$variables) {
 
  function civicrm_view_phenix_form_views_exposed_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
   $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
-
+  $request = \Drupal::request();
   if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--page-1') {
     $form['materiel_location_new']['#attributes']['data-subfamily'] = json_encode($custom_service->sousFamille());
     $form['materiel_location_new']['#attributes']['class'][] = 'all-data-subfamily';
@@ -944,34 +1038,53 @@ if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--list
   $form['materiel_location']['#attributes']['name'] = '';
 
   //filter by departement
+
+  $req_filter_by_departement = $request->get('filter_by_deprtmt');
+  // dump( $req_filter_by_departement );
   $form['filter_by_dprtmt'] = [
     '#type' => 'select',
     '#title' => t('Filtrer par departement'),
     '#attributes' => [
       'class' => ['filter_by_dprtmt'],
-    // 'data-bef-auto-submit-exclude' => "1"
+      // 'data-bef-auto-submit-exclude' => "1"
     ],
     '#options' => \Drupal::service('civicrm_view_phenix.view_services')->allDepartment(),
     '#name' => 'filter_by_deprtmt',
-    '#default_value' => 'All',
+    '#value' => $req_filter_by_departement,
     '#weight' => 0,
+    '#multiple' => true,
+    '#size' => 10,
   ];
+
 }
+
+
+  /* Custom reset button */
+
+  $white_list_form_id = ['views-exposed-form-location-occasion-membres-associes--liste-carte', 'views-exposed-form-location-occasion-membres-associes--page-1'];
+  if (in_array($form['#id'], $white_list_form_id)) {
+    $current_path = \Drupal::service('path.current')->getPath();
+    $form['actions']['#markup'] = '<a href="' . $current_path . '" data-var="/annuaire/reparation" class="custom-reset-btn button js-form-submit form-submit">Réinitialiser</a>';
+  }
+
   //change input to autocomplete
   if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--page-2') {
     $form['materiel_occasion']['#weight'] = 1;
     $form['marque_nom_copy'] = [
       '#type' => 'textfield',
-      '#title' => 'Nom de la marque ',
+      '#title' => 'Marques de matériel neuf ',
       '#autocomplete_route_name' => 'civicrm_view_phenix.autocomplete.name',
-      '#attributes' => ['class' => ['marque-nom-copy']],
-      '#weight' => 0
+      '#attributes' => ['class' => ['marque-nom-copy'], ['size' => 10]],
+      '#weight' => 0,
     ];
 
-   // $form['marque_nom']['#attributes']['class'][] = 'hidden';
+    $current_path = \Drupal::service('path.current')->getPath();
+    // $form['marque_nom']['#attributes']['class'][] = 'hidden';
 
     $form['actions']['submit']['#attributes']['class'][] = 'custom-submit-btn hide';
-    $form['materiel_occasion']['#suffix'] = '<a class="button filter-by-brand">Rechercher</a>';
+    $form['materiel_occasion']['#suffix'] = '<a href="' . $current_path . '" data-var="/annuaire/reparation" class="custom-reset-btn button js-form-submit form-submit">Réinitialiser</a>
+    <a class="button filter-by-brand">Rechercher</a>
+    ';
 
   }
 
@@ -1080,7 +1193,7 @@ if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--list
  */
 function civicrm_view_phenix_preprocess_views_view(&$vars) {
   $view = $vars["view"];
-
+  $request = \Drupal::request();
   if(($view->storage->id() == 'location_occasion_membres_associes_') && ($view->current_display != 'geographique')) {
     $req = \Drupal::request();
    $generate_html = '<div class="a-z-block custom-bloc-a-to-z">';
@@ -1136,11 +1249,64 @@ function civicrm_view_phenix_preprocess_views_view(&$vars) {
           '#attributes' => [
             'class' => ['filter_by_name'],
             'data-bef-auto-submit-exclude' => "1"
-
           ],
           '#name' => 'organization_name',
           'data-bef-auto-submit-exclude' => "1"
         ];
+        if ($current_path == '/annuaire/grues_a_tour') {
+          $location_filter = $request->get('loc');
+          $montage_filter = $request->get('montage');
+          $reparation_filter = $request->get('reparation');
+
+          $vars['#cache']['max-age'] = 0;
+          \Drupal::service('page_cache_kill_switch')->trigger();
+
+           $vars['header']['filter_location'] = [
+            '#id' => 'loc',
+            '#type' => 'checkbox',
+            '#title' => 'Filtrer par location',
+            '#description' => 'loc',
+            '#attributes' => [
+            ]
+           ];
+
+
+           $vars['header']['filter_montage'] = [
+            '#id' => 'montage',
+            '#type' => 'checkbox',
+            '#title' => 'Filtrer par montage',
+            '#description' => 'montage',
+            '#attributes' => [
+            ]
+           ];
+
+
+           $vars['header']['filter_reparation'] = [
+            '#id' => 'reparation',
+            '#type' => 'checkbox',
+            '#title' => 'Filtrer par reparation',
+            '#description' => 'reparation',
+            '#attributes' => [
+            ]
+           ];
+
+           $vars['header']['submit'] = array(
+            '#type' => 'submit',
+            '#value' => 'Rechercher',
+            '#attributes' => ['class' => ['btn-filter-by-loc']]
+          );
+
+        }
+
+
+
+
+        $current_uri = \Drupal::request()->getRequestUri();
+        $current_path = \Drupal::service('path.current')->getPath();
+
+        if (in_array($current_path, ['/annuaire/reparation', '/annuaire/alphabetique', '/annuaire/grues_a_tour', '/annuaire/membres-associes', '/annuaire/Label_SE'])) {
+          $vars['header']['reset']['#markup'] = '<a href="' . $current_path . '" data-var="/annuaire/reparation" class=" button js-form-submit form-submit">Réinitialiser</a>';
+        }
       }
 
 
@@ -1150,9 +1316,27 @@ function civicrm_view_phenix_preprocess_views_view(&$vars) {
       if (empty($view->result)) {
         $vars['header']['submit']['#suffix'] = '<span style="padding-left: 60px">Aucun résultat pour cette recherche.</span>';
       }
+    }
 
-      }
+}
 
+
+function civicrm_view_phenix_theme($existing, $type, $theme, $path)
+{
+ /*  return [
+    'civicrm_view_phenix_filter_by_location_reparation_montage' => [
+      'variables' => [
+        'content' => Null,
+      ],
+      'render element' => 'children',
+      'path' => $path . '/templates',
+      'template' => 'civicrm-view-phenix-filter-by-location-reparation-montage'
+    ],
+  ]; */
+}
+
+function civicrm_view_phenix_reset($form, &$form_state) {
+  $form_state['rebuild'] = FALSE;
 }
 
 
@@ -1164,12 +1348,30 @@ function civicrm_view_phenix_preprocess_views_view(&$vars) {
  * @return void
  */
 function civicrm_view_phenix_views_pre_render(Drupal\views\ViewExecutable  $view) {
+  $request = \Drupal::request();
+  $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
   if ($view->storage->id() == 'fiche' && ($view->current_display == 'page_2')) {
     unset($view->result[1]);
   }
-  if ($view->current_display == 'block_5') {
-  //  dump($view->result, $view);
+
+  // $view->query->displayHandler->handlers['header']['result']->options['#suffix'] = '<p>tmqlskdjfjf</p>';
+  //alter total display
+  if ($view->storage->get('id') == 'location_occasion_membres_associes_' ) {
+    $view->query->displayHandler->handlers['header']['result']->options['content'] =   '<p class="custom-total"> @total entreprises </p>';
   }
+
+  //Page location - display "sous-famille" filter next to the total
+  if ($view->storage->get('id') == 'location_occasion_membres_associes_' && $view->current_display == 'page_1') {
+     $current_filter = $request->get('materiel_location');
+     $sub_family = $custom_service->sousFamille();
+     if ($current_filter) {
+
+      $sub_family_filter = $sub_family[$current_filter];
+       $view->query->displayHandler->handlers['header']['result']->options['content'] =   '<p class="custom-total"> @total entreprises - ' . $sub_family_filter .'</p>';
+      }
+
+    }
+
 
   if ($view->storage->get('id') == 'location_occasion_membres_associes_' && $view->current_display == 'liste_carte') {
     //dump($view->result);
@@ -1226,7 +1428,7 @@ function civicrm_view_phenix_views_pre_view(Drupal\views\ViewExecutable $view, $
         'content' => '<a href="/annuaire/geographique/carte?' . $exploded_url[1] . '" class="see-the-map button js-form-submit form-submit">Voir la carte</a>',
         'plugin_id' => 'text_custom',
       );
-      $view->setHandler('liste_carte', 'footer', 'area_text_custom', $options);
+      $view->setHandler('liste_carte', 'header', 'area_text_custom', $options);
     }
 
   }
@@ -1291,12 +1493,32 @@ function build_ul_to_append_in_filter_toggle($ul_child, $id, $whiteslist, &$allU
 
 
  function civicrm_view_phenix_query_alter( &$query) {
+  $current_path = \Drupal::service('path.current')->getPath();
+
+   if(($query->alterTags['views_entreprise_localisation'] == 1 ) && (strpos($current_path, '/annuaire/details/') === false)) {//Page Voir la carte
+      $query->groupBy("civicrm_address.id");
+      $query->groupBy("civicrm_contact_civicrm_address.id");
+      $query->groupBy("contact_id_civicrm_contact.id");
+   }
    if($query->alterTags['views_location_occasion_membres_associes_'] == 1 &&
     (!array_key_exists('civicrm_contact_civicrm_value_phx_Individual_contact_fonction', $query->getTables()))){  //All views
-      $query->groupBy("civicrm_contact.organization_name");
-      $query->groupBy("civicrm_contact.id");
-      $query->groupBy("contact_id_civicrm_contact.id");
-      $query->groupBy("contact_id_civicrm_contact_1.id");
+       $query->groupBy("contact_id_civicrm_contact.id");
+       $query->groupBy("contact_id_civicrm_contact_1.id");
+       $query->groupBy("civicrm_contact.id");
+       $query->groupBy("civicrm_contact.legal_name");
+       $query->groupBy("contact_id_civicrm_contact.city");
      //also you can unset other group by critera by using, unset($query->getGroupBy());
   }
+
 }
+
+/**
+ * @param $variables
+ */
+function civicrm_view_phenix_preprocess_menu(&$variables){
+  if ($variables['menu_name'] == 'guide') {
+
+  }
+}
+
+

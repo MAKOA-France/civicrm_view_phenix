@@ -38,9 +38,9 @@
 
     //filter by location/ reparation
     $('.btn-filter-by-loc').on('click', function() {
-      let isFilterLocation = jQuery('#location').is(':checked') ? 'location=location&' : '';
-      let isFilterMontage = jQuery('#montage').is(':checked') ? 'montage=montage&' : '';
-      let isFilterReparation = jQuery('#reparation').is(':checked') ? 'reparation=reparation&' : '';
+      let isFilterLocation = jQuery('#loc').is(':checked') ? '&location=location' : '';
+      let isFilterMontage = jQuery('#montage').is(':checked') ? '&montage=montage' : '';
+      let isFilterReparation = jQuery('#reparation').is(':checked') ? '&reparation=reparation' : '';
       location.href = '/annuaire/grues_a_tour?' + isFilterLocation + isFilterMontage + isFilterReparation;
     });
 
@@ -726,7 +726,7 @@
         titleCancel: 'Exit Full Screensss',
         forceSeparateButton: true
     }).addTo(map);
-
+console.log('fired')
 
 
       control.onAdd = function() {

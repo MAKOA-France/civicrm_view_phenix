@@ -22,7 +22,6 @@
       let idSubFamily = values.replace(')', '');
       $('[name="subfamily"]').removeAttr('name');
       $('[name="materiel_location"]').val(idSubFamily)
-      console.log(values)
       let organizationNameVal = $('.filter_by_name').val();
       let filterBySubFamilyVal = $('.filter-by-subfamily').val();
       if (organizationNameVal == '') {
@@ -35,6 +34,21 @@
       }
 
     });
+
+
+    //filter by location/ reparation
+    $('.btn-filter-by-loc').on('click', function() {
+      let isFilterLocation = jQuery('#location').is(':checked') ? 'location=location&' : '';
+      let isFilterMontage = jQuery('#montage').is(':checked') ? 'montage=montage&' : '';
+      let isFilterReparation = jQuery('#reparation').is(':checked') ? 'reparation=reparation&' : '';
+      location.href = '/annuaire/grues_a_tour?' + isFilterLocation + isFilterMontage + isFilterReparation;
+    });
+
+
+    jQuery('#loc').attr('checked', queryString.includes('location=location'));
+
+    jQuery('#reparation').attr('checked', queryString.includes('reparation=reparation'))
+    jQuery('#montage').attr('checked', queryString.includes('montage=montage'))
 
     //Page location filter by materiel location alter link
     jQuery('ul li a[name*="materiel_location_new"]').on('mouseover', function() {
@@ -131,7 +145,7 @@
 
     $(window).on('load',function() {
 
-      jQuery('.filter_by_dprtmt').val(depId);
+      //jQuery('.filter_by_dprtmt').val(depId);
       let brandValue = $('.marque-nom-copy').val();
       $.ajax({
         url: '/annuaire/occasion/setdefaultvalue',
@@ -359,9 +373,9 @@
 
 
 
-  Drupal.Leaflet.prototype.create_feature_group = function() {
+ /*  Drupal.Leaflet.prototype.create_feature_group = function() {
     return new L.LayerGroup();
-  };
+  }; */
 
 
 /*   Drupal.Leaflet.prototype.create_divicon = function (options) {
@@ -659,7 +673,7 @@
       // adapt the Map Zoom and the Start Zoom accordingly.
       if (self.settings.hasOwnProperty('zoomFiner') && parseInt(self.settings.zoomFiner)) {
         start_zoom += parseFloat(self.settings.zoomFiner);
-        Drupal.Leaflet[mapid].lMap.setView(start_center, start_zoom);
+        // Drupal.Leaflet[mapid].lMap.setView(start_center, start_zoom);
       }
       // start_center.lat = 48.864716;
       // start_center.lng = 2.349014;
@@ -670,22 +684,21 @@
 
 
        Drupal.Leaflet[mapid].start_zoom = start_zoom;
-        Drupal.Leaflet[mapid].lMap.setZoom(7);
+        // Drupal.Leaflet[mapid].lMap.setZoom(5);console.log('set ZOOM 7')
        Drupal.Leaflet[mapid].start_center = start_center;
      }
     if ((jQuery('.page-annuaire-table-liste-géographique').length > 0) && (window.location.search.indexOf('organization_name') > 0)) {
       start_center.lat = 47,76620099445003;
       start_center.lng = 1,5858760671640175;
       // Set the map start zoom and center.
-       Drupal.Leaflet[mapid].lMap.setView(start_center, 6);
     }
-
+   // Drupal.Leaflet[mapid].lMap.setView(start_center, 6);
     if ($('.annuaire-detail-text').length > 0 ) {
       // start_center.lat = latCenter;
       // start_center.lng = lonCenter;
       // Set the map start zoom and center.
      // Drupal.Leaflet[mapid].lMap.setView(start_center, 15);
-      Drupal.Leaflet[mapid].lMap.setZoom(7);
+      Drupal.Leaflet[mapid].lMap.setZoom(6);
 
     }
 
@@ -706,6 +719,16 @@
       let self = this;
       let reset_map_control_settings = drupalSettings.leaflet[mapid].map.settings.reset_map;
       let control = new L.Control({position: reset_map_control_settings.position});
+
+      L.control.fullscreen({
+        position: 'topleft',
+        title: 'Full Screen teest',
+        titleCancel: 'Exit Full Screensss',
+        forceSeparateButton: true
+    }).addTo(map);
+console.log('fired')
+
+
       control.onAdd = function() {
         // Set CSS for the control border.
         let controlUI = L.DomUtil.create('div','resetzoom');
@@ -738,6 +761,9 @@
         },controlUI);
         return controlUI;
       };
+
+
+
       return control;
     };
   }

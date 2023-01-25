@@ -24,15 +24,17 @@ class GetDataController extends ControllerBase
     $request = \Drupal::request();
     $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
     $subFamilys = $custom_service->sousFamille();
+    $sorted = asort($subFamilys);
+
     $input = $request->query->get('q');
     foreach ($subFamilys as $key => $subFamily) {
-      if (stripos($subFamily, $input) !== false) {
+       if (stripos($subFamily, $input) !== false) {
         $results[] = [
           'value' => $subFamily . '(' . $key . ')',
           'label' => $subFamily,
           'data-val' => $key,
         ];
-      }
+       }
     }
 
     return new JsonResponse ($results);

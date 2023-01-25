@@ -726,7 +726,7 @@
         titleCancel: 'Exit Full Screensss',
         forceSeparateButton: true
     }).addTo(map);
-console.log('fired')
+
 
 
       control.onAdd = function() {

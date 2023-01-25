@@ -543,7 +543,7 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
           $custom_service->addWhereQuery ($query, '1', 'civicrm_value_phx_secteur', 'phx_secteur_loueur', '=');
           break;
         case 'montage':
-          $custom_service->addWhereQuery ($query, '1', 'civicrm_value_phx_secteur', 'phx_secteur_distributeur', '=');
+          $custom_service->addWhereQuery ($query, '1', 'civicrm_value_phx_secteur', 'monteur_190', '=');
           break;
         case 'reparation':
           $custom_service->addWhereQuery ($query, '1', 'civicrm_value_phx_secteur', 'phx_secteur_reparateur', '=');
@@ -1122,7 +1122,7 @@ if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--list
         ]
 
         ],
-      '#weight' => -20
+      '#weight' => -20,
     ];
 
     $form['materiel_location_new']['#attributes']['class'][] = 'ul-parent-materiel-location';

@@ -113,4 +113,35 @@ class ViewServiceQuery {
       \Drupal::database()->query("select id from civicrm_contact where contact_sub_type = 'Agence' and  id = " . $contactID)->fetch();
   }
 
+
+  public function getContactOrganizationName ($contactId) {
+    return \Civi\Api4\Contact::get()
+    ->addSelect('organization_name')
+    ->addWhere('id', '=', $contactId)
+    ->execute()->column('organization_name');
+  }
+
+  /**
+   * Get matériel occasion  linked with the company
+   *
+   * @param [type] $contactID
+   * @return void
+   */
+  public function getMaterielOccasion ($contactID) {
+    $db = \Drupal::database();
+    $string_query = 'select materiel_occasion from civicrm_value_phx_materiel where entity_id = ' . $contactID;
+    $materielOccasionId = $db->query($string_query)->fetch()->materiel_occasion;
+    $materielOccasionId = str_replace('x01', '', $materielOccasionId);
+    $new_query = "select name  from civicrm_option_value where option_group_id = 107 and  value = '" . $materielOccasionId . "'";
+    $allMaterielOcc = $db->query($new_query)->fetchAll();
+    if ($allMaterielOcc) {
+      $html = '<ul>';
+      foreach ($allMaterielOcc as $materiel) {
+        $html .= '<li>' . $materiel->name .  '</li>';
+      }
+      $html .= '</ul>';
+      return $html;
+    }
+  }
+
 }

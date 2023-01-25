@@ -104,16 +104,16 @@ class ViewService {
   }
 
   public function getMark ($label) {
-   /*  return \Civi\Api4\CustomValue::get('Marques')
-    ->addSelect('nom_Marque', 'nom_Marque:label')
-    ->addOrderBy('nom_Marque:label', 'ASC')
-    ->setLimit(25)
-    ->execute(); */
+   /*  return
+ $optionValues = \Civi\Api4\OptionValue::get()
+  ->addSelect('id', 'option_group_id', 'label')
+  ->addWhere('option_group_id', '=', 105)
+  ->addWhere('is_reserved', '=', TRUE)
+  ->execute();*/
 
 
-    //TODO HERE
     $database = \Drupal::database();
-    $query = $database->query("SELECT * FROM civicrm_option_value WHERE option_group_id = 105 and label  LIKE '". $label ."%' ");
+    $query = $database->query("SELECT * FROM civicrm_option_value WHERE   option_group_id = 105 and is_reserved = 1 AND label  LIKE '". $label ."%' ");
     return $query->fetchAll();
   }
 
@@ -284,7 +284,7 @@ class ViewService {
 
 
   /**
-   * 
+   *
    */
   public function getContactIdByBasicCommonGenericQueryFilters () {
     $contacts_cible_who_are_in_dynamic_group = $this->getAllContactIDInGroupDyanmicByGroupID(ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT);
@@ -314,7 +314,7 @@ class ViewService {
 
 
   /**
-   * Get Contact Alphabetic
+   *
    */
   public function getIdContactAlphabetiqueForVerification () {
     $contacts_cible_who_are_in_dynamic_group = $this->getAllContactIDInGroupDyanmicByGroupID(ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT);

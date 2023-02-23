@@ -1,2 +1,2 @@
 # civicrm_view_phenix
-extension dlr
+custom module dlr

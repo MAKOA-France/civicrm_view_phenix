@@ -17,6 +17,8 @@ class ViewService {
   const GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_ET_AGENCES = 195;
   const GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT = 142;
 
+  const TITTLE_SITE = ' | Annuaire DLR distribution, location, réparation de matériels de chantier';
+
   /**
    * CustomService constructor.
    * @param AccountInterface $currentUser
@@ -113,7 +115,7 @@ class ViewService {
 
 
     $database = \Drupal::database();
-    $query = $database->query("SELECT * FROM civicrm_option_value WHERE   option_group_id = 105 and is_reserved = 1 AND label  LIKE '". $label ."%' ");
+    $query = $database->query("SELECT * FROM civicrm_option_value WHERE   option_group_id = 105 /*and is_reserved = 1*/ AND label  LIKE '". $label ."%' ");
     return $query->fetchAll();
   }
 
@@ -199,13 +201,13 @@ class ViewService {
 
   public function getAgenceLinkedWithCompany ($companyId) {
     return civicrm_api3('Relationship', 'get', [
-      'contact_id_a' => $companyId,
-      'contact_id_b.contact_type' => "Organization",
+      'contact_id_b' => $companyId,
+      'contact_id_a.contact_type' => "Organization",
       'is_active' => 1,
     // 'relationship_type_id' => $relationship_type_id,
-      'return' => ['id', 'contact_id_b', 'relationship_type_id.name_a_b', 'geo_code_1', 'geo_code_2'],
+      'return' => ['id', 'contact_id_a', 'relationship_type_id.name_a_b', 'geo_code_1', 'geo_code_2'],
       'option.limit' => 0,
-      'option.sort' => 'contact_id_b.display_name',
+      'option.sort' => 'contact_id_a.display_name',
     ]);
   }
 
@@ -284,7 +286,7 @@ class ViewService {
 
 
   /**
-   *
+   * Get all contact type cible /
    */
   public function getContactIdByBasicCommonGenericQueryFilters () {
     $contacts_cible_who_are_in_dynamic_group = $this->getAllContactIDInGroupDyanmicByGroupID(ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT);
@@ -298,13 +300,13 @@ class ViewService {
     AND contact_sub_type = \'Cible\'
     AND A.is_primary = 1
     AND P.is_primary = 1
-    AND  A.city IS NOT NULL
+    -- AND  A.city IS NOT NULL
     AND  C.is_deleted = 0
-    AND A.postal_code IS NOT NULL
+    -- AND A.postal_code IS NOT NULL
     AND A.geo_code_1 IS NOT NULL
     AND M.membership_type_id IN (1, 2, 3, 5)
     AND AN.org_annuaireenligne_DLR = 1
-    AND C.id IN (' . $contacts_cible_who_are_in_dynamic_group . ')';
+     AND C.id IN (' . $contacts_cible_who_are_in_dynamic_group . ')';
 
 
     $allContactId =  \Drupal::database()->query($string_query)->fetchAll();
@@ -333,8 +335,8 @@ class ViewService {
     AND A.postal_code IS NOT NULL
     AND A.geo_code_1 IS NOT NULL
     AND M.membership_type_id IN (1)
-    AND AN.org_annuaireenligne_DLR = 1
-    AND C.id IN (' . $contacts_cible_who_are_in_dynamic_group . ')';
+    AND AN.org_annuaireenligne_DLR = 1';
+    // AND C.id IN (' . $contacts_cible_who_are_in_dynamic_group . ')
 
 
     $allContactId =  \Drupal::database()->query($string_query)->fetchAll();
@@ -344,40 +346,41 @@ class ViewService {
   public function geographiqueGetAllAgencesLinkedWithCibleDlr () {
     //Les agences liées à des cibles DLR membres actuels
     $contacts_cible_who_are_in_dynamic_group = $this->getAllContactIDInGroupDyanmicByGroupID(ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT);
-    $contacts_cible_who_are_in_dynamic_group = implode (',', $contacts_cible_who_are_in_dynamic_group);
+  // $contacts_cible_who_are_in_dynamic_group = implode (',', $contacts_cible_who_are_in_dynamic_group); 
+    if ($contacts_cible_who_are_in_dynamic_group) {
 
-    $all_agence_id_linked_whith_cible_dlr = \Drupal::database()->query(
-    'select R.contact_id_b from civicrm_contact as C left join civicrm_relationship as R ON  C.id = R.contact_id_b
-      where  contact_sub_type = \'Agence\' and R.contact_id_a IN ( ' . $contacts_cible_who_are_in_dynamic_group . ')'
-      )->fetchAll();
-    $ids =  array_column($all_agence_id_linked_whith_cible_dlr, 'contact_id_b');
-    $ids = implode(', ', $ids);
+     $all_agence_id_linked_whith_cible_dlr = \Civi\Api4\Relationship::get()
+       ->addSelect('contact_id_b')
+       ->addWhere('contact_id_a', 'IN', $contacts_cible_who_are_in_dynamic_group)
+       ->execute();
+       $ids = $all_agence_id_linked_whith_cible_dlr->column('contact_id_');
+     $ids = implode(', ', $ids);
+     $string_query = 'SELECT C.id from civicrm_contact as C
+   left join civicrm_membership as M ON M.contact_id = C.id
+   left join civicrm_value_phx_org_annuaireenligne AN ON C.id = AN.entity_id
 
-    $string_query = 'SELECT C.id from civicrm_contact as C
-    inner join civicrm_membership as M ON M.contact_id = C.id
-    inner join civicrm_value_phx_org_annuaireenligne AN ON C.id = AN.entity_id
+   left join civicrm_address as A ON A.contact_id = C.id
+    left join civicrm_phone as P ON P.contact_id = C.id
 
-    inner join civicrm_address as A ON A.contact_id = C.id
-    inner join civicrm_phone as P ON P.contact_id = C.id
-
-    WHERE contact_type = \'Organization\'
-    AND C.contact_sub_type = \'Agence\'
+   WHERE C.contact_sub_type = \'Agence\'
+    AND C.contact_type = \'Organization\'
     AND AN.org_annuaireenligne_DLR = 1
     AND A.is_primary = 1
     AND P.is_primary = 1
-    AND A.city IS NOT NULL
-    AND C.is_deleted = 0
-    AND A.postal_code IS NOT NULL
-    AND A.geo_code_1 IS NOT NULL
+   -- AND A.city IS NOT NULL
+   AND C.is_deleted = 0
+   -- AND A.postal_code IS NOT NULL
+    AND A.geo_code_1 IS NOT NULL';
 
-    AND M.membership_type_id IN (1, 2, 3, 5)
 
-    AND C.id IN (' . $ids . ')';
+   if ($ids) {
+     $string_query .= ' AND C.id IN (' . $ids . ')';
+   }
 
-    $allContactId =  \Drupal::database()->query($string_query)->fetchAll();
-    return array_column($allContactId, 'id');
-
-  }
+   $allContactId =  \Drupal::database()->query($string_query)->fetchAll();
+   return array_column($allContactId, 'id');
+   } 
+ }
 
   public function CibleMembreActuel () {
     $contacts_cible_who_are_in_dynamic_group = $this->getAllContactIDInGroupDyanmicByGroupID(ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT);
@@ -564,5 +567,22 @@ class ViewService {
     ];
   }
 
+  
+  public function getNodeFieldValue ($node, $field) {
+    $value = '';
+    $getValue = $node->get($field)->getValue();
+    if (!empty($getValue)) {
+      if (isset($getValue[0]['target_id'])) { //For entity reference (img / taxonomy ...)
+        $value = $getValue[0]['target_id'];
+      }elseif (isset($getValue[0]['value']))  { //For simple text / date
+        $value = $getValue[0]['value'];
+      }else if(isset($getValue[0]['uri'])) {
+        $value = $getValue[0]['uri'];
+      }else { //other type of field
+
+      }
+    }
+    return $value;
+  }
 
 }

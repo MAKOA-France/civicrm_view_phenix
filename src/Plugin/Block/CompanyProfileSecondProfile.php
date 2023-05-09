@@ -12,9 +12,6 @@ use Drupal\Core\Block\BlockBase;
  *  id = "alphabetical_filter_view",
  *  admin_label = @Translation("Company profile second column view block"),
  *  category = @Translation("Head Views blocks"),
- *  context_definitions = {
- *     "mark" = @ContextDefinition("entity:mark", required = FALSE),
- *  }
  * )
  */
 class CompanyProfileSecondProfile  extends BlockBase  {
@@ -118,11 +115,12 @@ class CompanyProfileSecondProfile  extends BlockBase  {
       //Check if company is linked with label SE or not
       $tagHtmlForLabelSE = '';
       $isCompanyLabelSE = $this->getQueryService()->isCompanyLabelSE($id);
+      $isLabelSe = false;
       if (!empty ($isCompanyLabelSE) && in_array(6, $isCompanyLabelSE)) {
         $tagHtmlForLabelSE = '
-        <span class="company-profile-label-se">Label SE+</span>
-        <img class="company-profile-img-label-se" src="https://dlr-guide.dev.makoa.net/files/styles/thumbnail/public/2022-07/logo-pages-se_1.png">
+        
         ';
+        $isLabelSe = true;
       }
 
       $isMembreAssocie = $this->getQueryService()->isContactMemberAssocie ($id);
@@ -141,14 +139,17 @@ class CompanyProfileSecondProfile  extends BlockBase  {
       <strong class="views-label views-label-materiel-occasion title-fiche">Activité principale : </strong>
       ' . $tagHtmlForLabelSE . '
       <p class="content-fiche"> ' .  $mainActivityLabelVal .  ' </p>' : '</div>';
-
-      $htmlDescription = strlen($description) > 5 ? ' <strong class="views-label views-label-marque-nom title-fiche">Descriptif de l\'entreprise : </strong>
-        <div class="content-fiche company-description">' . $description . '</div><br>' : '';
+      if (strpos($mainActivityLabel->first()['contact_id.org_dlr.activiteprincipale:label'], 'Fournisseur DLR :') !== false) {
+        $mainActivity = $tagHtmlForLabelSE; 
+      }
+      $htmlDescription = strlen($description) > 5 ? ' <p class="views-label views-label-marque-nom title-fiche">Descriptif de l\'entreprise : </p>
+        <div class="content-fiche company-description">' . $description . '</div><br>' : '<span class="noafff hide hidden">tssssa</span>';
 
       $materiel_occasion_html = $materiel_occasion_label ? ' <strong class="views-label views-label-marque-nom title-fiche">Matériels d\'occasion : </strong>
         <div class="content-fiche company-description">' . $materiel_occasion_label . '</div>' : '';
 
-      $html = '<div class="second-column company-profile-block">
+      $imgLabelSE = $isLabelSe ? '<img class="company-profile-img-label-se" src="/files/styles/thumbnail/public/2022-07/logo-pages-se_1.png">' : '';
+      $html = $imgLabelSE . '<div class="second-column company-profile-block">
         ' . $mainActivity . $htmlDescription
          . $materielHtml . '
 

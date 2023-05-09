@@ -143,5 +143,42 @@ class ViewServiceQuery {
       return $html;
     }
   }
+ /**
+   * Page Grue à tour filter by location or Montage or Réparation
+   *
+   * @param [type] $get_filter_secteurs
+   * @param [type] $query
+   * @return void
+   */
+  public function GrueATourFilterCheckboxes ($get_filter_secteurs, $query) {
+    $conditions = [];
+    foreach ($get_filter_secteurs as $get_filter_secteur) {
+      switch ($get_filter_secteur) {
+        case 'location':
+          $column = 'phx_secteur_loueur';
+          break;
+        case 'montage':
+          $column = 'monteur_190';
+          break;
+        case 'reparation':
+          $column = 'phx_secteur_reparateur';
+          break;
+      }
+
+      $conditions[] = [
+        'field' => 'civicrm_value_phx_secteur.'.$column,
+        'value' => '1',
+        'operator' => '=',
+      ];
+    }
+
+
+    $query->where[] =  [
+      'conditions' => $conditions,
+      'type' => 'OR',
+    ];
+
+    return $query;
+  }
 
 }

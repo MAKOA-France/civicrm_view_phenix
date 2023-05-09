@@ -1,6 +1,6 @@
 (function($, Drupal, drupalSettings) {
 
-  const RED_MARKER_PATH = 'https://dlr-guide.dev.makoa.net/sites/dlr-guide.dev.makoa.net/modules/contrib_0/civicrm_view_phenix/img/red_marker.webp';
+  const RED_MARKER_PATH = '/files/styles/red_marker.webp';
   Drupal.behaviors.leaflet = {
     attach: function(context, settings) {
 
@@ -14,13 +14,25 @@
     //Inverser l'affichage de la carte et la video  (fiche entreprise)
     jQuery('.video-content-fiche').insertBefore('.testation2 .views-element-container');
 
+
+    $('.ul-child-materiel-location.form-select').attr('autocomplete', 'true');
+    $('.ul-child-materiel-location.form-select').attr('size', '10');
+    $('.ul-child-materiel-location.form-select').css('height', '100%');
+
+    jQuery('p.content-fiche').each(function(el,id) 
+    {
+        if (jQuery(id).text().includes('Fournisseur DLR')) {
+          jQuery(id).hide();
+        }
+    })
+
     //Page location
-    $('.filter-by-subfamily').removeAttr('name');
+    // $('.filter-by-subfamily').removeAttr('name');
     $('.exposed-filter-location-btn').once('leaflet').on('click', function(){
       let currVal = $('.filter-by-subfamily').val();
       let values = currVal.split('(')[1];
       let idSubFamily = values.replace(')', '');
-      $('[name="subfamily"]').removeAttr('name');
+      // $('[name="subfamily"]').removeAttr('name');
       $('[name="materiel_location"]').val(idSubFamily)
       let organizationNameVal = $('.filter_by_name').val();
       let filterBySubFamilyVal = $('.filter-by-subfamily').val();
@@ -53,10 +65,16 @@
     //Page location filter by materiel location alter link
     jQuery('ul li a[name*="materiel_location_new"]').on('mouseover', function() {
       let currHref = jQuery(this).attr('href');
+      let currName = jQuery(this).attr('name');
+
+      let newurl =  currName.replace('[', '=');
+      newurl =  newurl.replace(']', '');
+
+
       let matchedUrl = currHref.match(/&materiel_location=[0-9]+/);
+      jQuery(this).attr('href', 'location?' + newurl);
       if (matchedUrl) {
-         let newHref = currHref.replace(matchedUrl[0], '');
-          jQuery(this).attr('href', newHref);
+        //  let newHref = currHref.replace(matchedUrl[0], '');
       }
     })
     //Page geographique Set default value filter by name
@@ -779,7 +797,7 @@ console.log('fired')
           var itemToString = statutsArray[b];
 
             if (itemToString == 6) {
-                statuts[i].innerHTML = '<img class="img-label-se" src=\"https://dlr-guide.dev.makoa.net/files/styles/thumbnail/public/2022-07/logo-pages-se_1.png">'
+                statuts[i].innerHTML = '<img class="img-label-se" src=\"/files/styles/thumbnail/public/2022-07/logo-pages-se_2.png">'
             }
             // else if(i != 0)
             else if(itemToString != 0)
@@ -791,5 +809,4 @@ console.log('fired')
   }
 
   })(jQuery, Drupal, drupalSettings);
-
 

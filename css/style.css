@@ -1,9 +1,9 @@
-header .top-bar {
+/* header .top-bar {
     background: white;
     border: 1px solid;
 }
-
-.menu li.menu-item a{
+ */
+/* .menu li.menu-item a{
     color: #707070;
     font-weight: bold;
     font-size: 100%;
@@ -12,21 +12,25 @@ header .top-bar {
     align-items: center;
     text-transform: capitalize;
 }
+ */
 
-thead, tbody, tfoot {
+.company-profile-membre-associe {
+  padding-left: 0 !important;
+}
+.page-annuaire-alphabetique thead, tbody, tfoot {
     background-color: white !important;
 }
-table tbody tr {
+.page-annuaire-alphabetique table tbody tr {
     background: #7070701A !important;
 }
-thead {
+.page-annuaire-alphabetique thead {
     background: #7070701A !important;
 }
-table.cols-4 tr {
+.page-annuaire-alphabetique table.cols-4 tr {
     border: 1px solid #e7d8d8;
 }
 
-table.cols-5 tr {
+.page-annuaire-alphabetique table.cols-5 tr {
     border: 1px solid #e7d8d8;
 }
 
@@ -51,7 +55,7 @@ table.cols-5 tr {
   color: #54595f;
   font-size: 100%;
 }
-
+/*
 .cols-4 thead th {
   color: #878786;
   font-size: 14px;
@@ -60,10 +64,41 @@ table.cols-5 tr {
 
 .content-fiche {
   color: #707070;
+} */
+
+.views-label-marque-nom.title-fiche {
+  font-weight: bold;
 }
 
+img.company-profile-img-label-se {
+  width: 40%;
+  float: right;
+  margin-left: -23px;
+  margin-top: -31px;
+  left: 4px;
+  margin-right: 29px;
+}
 
-body {
+.content-fiche.company-description > p > a > img {
+  display: none;
+}
+.position-initial.block-civicrm-custom-block img.img-logo-head-annuaire {
+  width: 35%;
+}
+
+/* webform */
+.form-item-civicrm-4-contact-1-cg13-custom-200, .form-item-civicrm-3-contact-1-cg13-custom-200, .form-item-civicrm-2-contact-1-cg13-custom-200, .form-item-civicrm-3-contact-1-cg13-custom-37,
+.form-item-civicrm-5-contact-1-cg13-custom-200,  .form-item-civicrm-6-contact-1-cg13-custom-200, .form-item-civicrm-7-contact-1-cg13-custom-200,  .form-item-civicrm-8-contact-1-cg13-custom-200,
+.form-item-civicrm-9-contact-1-cg13-custom-200,  .form-item-civicrm-10-contact-1-cg13-custom-200
+ {
+  display: none;
+}
+
+.add-more-filial {
+  font-size: 12px;
+}
+
+.page-annuaire-alphabetique body {
   color: #54595f !important;
 }
 
@@ -83,12 +118,15 @@ footer .basic__body.quickedit-field p {
 footer p {
   font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
 }
-#block-b-zf-content > div > div > header{
+/* #block-b-zf-content > div > div > header{
   font-size: 14px;
-}
-thead th,
-tbody td,
+} */
+/* .page-annuaire-alphabetique thead th,
+.page-annuaire-alphabetique tbody td,
 a{
     font-size: 12px;
 }
-
+ */
+.form-item-civicrm-1-contact-1-cg13-custom-35  {
+  display: none !important;
+}

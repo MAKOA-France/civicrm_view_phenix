@@ -1,6 +1,6 @@
 (function($, Drupal, drupalSettings) {
 
-  const RED_MARKER_PATH = 'https://dlr-guide.dev.makoa.net/sites/dlr-guide.dev.makoa.net/modules/contrib_0/civicrm_view_phenix/img/red_marker.webp';
+  const RED_MARKER_PATH = '/files/styles/red_marker.webp';
   Drupal.behaviors.customView = {
     attach: function(context, settings) {
 

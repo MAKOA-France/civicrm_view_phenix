@@ -1485,6 +1485,16 @@ function civicrm_view_phenix_views_pre_render(Drupal\views\ViewExecutable  $view
 function civicrm_view_phenix_views_pre_view(Drupal\views\ViewExecutable $view, $display_id, array &$args) {
 
 
+  $db = \Drupal::database();
+  //On n'affiche pas la page si ce n'est pas un adhérent
+  if (($view->id() == 'fiche') && ($display_id == 'page_2')) {
+    $contact_id = \Drupal::request()->attributes->get('arg_0');
+    $isAnnuaire = $db->query('select * from civicrm_value_phx_org_annuaireenligne where entity_id = ' . $contact_id)->fetch()->org_annuaireenligne_DLR;
+    if (!$isAnnuaire) {
+      throw new Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
+    }
+  }
+
   if ($view->id() == 'publicite') {
     $view->element['#attributes']['class'][] = 'block-view-publicite';
   }

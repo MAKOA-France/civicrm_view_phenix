@@ -135,7 +135,7 @@ class CompanyProfileSecondProfile  extends BlockBase  {
       $materiel_occasion_label = $this->getQueryService()->getMaterielOccasion($id);
 
 
-      $mainActivity = $mainActivityLabel->first() ? '<div class="company-profile-SE">
+      $mainActivity = $mainActivityLabel->first() && $mainActivityLabelVal  ? '<div class="company-profile-SE">
       <strong class="views-label views-label-materiel-occasion title-fiche">Activité principale : </strong>
       ' . $tagHtmlForLabelSE . '
       <p class="content-fiche"> ' .  $mainActivityLabelVal .  ' </p>' : '</div>';

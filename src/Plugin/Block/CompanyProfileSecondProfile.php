@@ -24,49 +24,47 @@ class CompanyProfileSecondProfile  extends BlockBase  {
     $id = \Drupal::request()->get('arg_0');
     $database = \Drupal::database();
 
+    $description = $database->query('select org_dlr_descriptif_entreprise from civicrm_value_phx_org_dlr where entity_id = ' . $id)->fetchCol();
+    $idMainActivity = $database->query('select org_dlr_activiteprincipale from civicrm_value_phx_org_dlr where entity_id = ' . $id)->fetchCol();
+    $mainActivity = $database->query('select  label from civicrm_option_value where value  = ' . $idMainActivity[0] . ' and option_group_id = 100')->fetchCol();
+    $equipmentRental = $database->query('select materiel_location from civicrm_value_phx_materiel where entity_id = ' . $id)->fetchCol();
+    
     $contacts = \Civi\Api4\Contact::get()
       ->addSelect('org_dlr.descriptif_entreprise', 'org_dlr.activiteprincipale', 'Materiel.nom_location')
       ->addWhere('id', '=', $id)
       ->execute();
       $description = '';
-      if ($contacts) {
-        $contacts = $contacts->first();
-        $description = $contacts['org_dlr.descriptif_entreprise'];
-        $idMainActivity = $contacts['org_dlr.activiteprincipale'];
-        $equipmentRental = $contacts['Materiel.nom_location'];
-        $mainActivityLabel = \Civi\Api4\ActivityContact::get()
-          ->addSelect('contact_id.org_dlr.activiteprincipale:label')
-          ->addWhere('contact_id', '=', $id)
-          ->setLimit(1)
-          ->execute();
-
+      if ($idMainActivity) {
+        $description = $database->query('select org_dlr_descriptif_entreprise from civicrm_value_phx_org_dlr where entity_id = ' . $id)->fetchCol()[0];
+        $idMainActivity = $database->query('select org_dlr_activiteprincipale from civicrm_value_phx_org_dlr where entity_id = ' . $id)->fetchCol()[0];
+        $equipmentRental = $database->query('select materiel_location from civicrm_value_phx_materiel where entity_id = ' . $id)->fetchCol();
+        $mainActivityLabel = $database->query('select  label from civicrm_option_value where value  = ' . $idMainActivity . ' and option_group_id = 100')->fetchCol();
         $equipmentRental = implode($equipmentRental, ', ');
 
+        $isThereAnyLocation = false;
         if ($equipmentRental) {
-           $rentals = $database->query('SELECT label FROM civicrm_option_value where option_group_id = 106 and  value IN (' . $equipmentRental . ') order by label asc')->fetchAll();
-           $materielLocation = '<div class="field-content occasion-details content-fiche"><ul>';
-
-           foreach ($rentals as $rental) {
-             $materielLocation .= '<li class="content-fiche">' . $rental->label . '</li>';
-            }
-
-            $materielLocation .= '</ul></div>';
-
+          $equipmentRental = str_replace("\x01", "", $equipmentRental);
+          $rentals = $database->query('SELECT label FROM civicrm_option_value where option_group_id = 106 and  value IN (' . $equipmentRental . ') order by label asc')->fetchAll();
+          $materielLocation = '<div class="field-content occasion-details content-fiche"><ul>';
+          
+          $isThereAnyLocation = !empty($rentals) ? true : false;
+          foreach ($rentals as $rental) {
+             $materielLocation .= '<li class="content-fiche">' . $rental->label. '</li>';
           }
 
+          $materielLocation .= '</ul></div>';
 
-          //Get used equipment (materiel d'occasion)
-          $usedEquipment = \Civi\Api4\Contact::get()
-            ->addSelect('Materiel.nom_occasion')
-            ->addWhere('id', '=', $id)
-            ->execute();
-            if ($usedEquipment) {
-              $usedEquipment = $usedEquipment->first()['Materiel.nom_occasion'];
-              if (sizeof($usedEquipment) > 1) {
-                // $usedEquipment = implode($usedEquipment, ', ');
-                // $allUsedEquipments = $database->query('SELECT label FROM civicrm_option_value where option_group_id = 107 and  value IN (' . $usedEquipment . ') order by label asc')->fetchAll();
-              }
-            }
+        }
+
+
+        //Get used equipment (materiel d'occasion)
+        $usedEquipment = $database->query('select materiel_occasion from civicrm_value_phx_materiel where entity_id = ' . $id)->fetchCol();
+        if ($usedEquipment) {
+          if (sizeof($usedEquipment) > 1) {
+            // $usedEquipment = implode($usedEquipment, ', ');
+            // $allUsedEquipments = $database->query('SELECT label FROM civicrm_option_value where option_group_id = 107 and  value IN (' . $usedEquipment . ') order by label asc')->fetchAll();
+          }
+        }
 
 
         //Gel all distributed brands
@@ -101,7 +99,7 @@ class CompanyProfileSecondProfile  extends BlockBase  {
       $htmlUsedEquipments .= '</ul></div>';
 
 
-      $materielLocation = $equipmentRental ? ' <strong class="views-label views-label-materiel-occasion title-fiche">Location : </strong>' . $materielLocation : '';
+      $materielLocation = ($equipmentRental  && $isThereAnyLocation) ? ' <strong class="views-label views-label-materiel-occasion title-fiche">Location : </strong>' . $materielLocation : '';
 
       $materielHtml = $allUsedEquipments ? '<strong class="views-label views-label-materiel-occasion title-fiche">Matériels : </strong>
         ' . $htmlUsedEquipments : '';
@@ -109,7 +107,7 @@ class CompanyProfileSecondProfile  extends BlockBase  {
 
       $brandLabel = $distributedBrand ? '<strong class="views-label views-label-marque-nom title-fiche">Marques : </strong>' : '';
 
-      $mainActivityLabelVal = $mainActivityLabel->first()['contact_id.org_dlr.activiteprincipale:label'];
+      $mainActivityLabelVal = $mainActivityLabel[0];
       $mainActivityLabelVal = str_replace('Professionnel DLR : ', '', $mainActivityLabelVal);
 
       //Check if company is linked with label SE or not
@@ -135,11 +133,11 @@ class CompanyProfileSecondProfile  extends BlockBase  {
       $materiel_occasion_label = $this->getQueryService()->getMaterielOccasion($id);
 
 
-      $mainActivity = $mainActivityLabel->first() && $mainActivityLabelVal  ? '<div class="company-profile-SE">
+      $mainActivity = $mainActivityLabel[0] && $mainActivityLabelVal  ? '<div class="company-profile-SE">
       <strong class="views-label views-label-materiel-occasion title-fiche">Activité principale : </strong>
       ' . $tagHtmlForLabelSE . '
       <p class="content-fiche"> ' .  $mainActivityLabelVal .  ' </p>' : '</div>';
-      if (strpos($mainActivityLabel->first()['contact_id.org_dlr.activiteprincipale:label'], 'Fournisseur DLR :') !== false) {
+      if (strpos($mainActivityLabel[0], 'Fournisseur DLR :') !== false) {
         $mainActivity = $tagHtmlForLabelSE; 
       }
       $htmlDescription = strlen($description) > 5 ? ' <p class="views-label views-label-marque-nom title-fiche">Descriptif de l\'entreprise : </p>

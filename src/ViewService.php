@@ -142,6 +142,7 @@ class ViewService {
     ->execute()->first();
     $hasLatitude = $res['geo_code_1'];
     //$hasLongitude = $res['geo_code_2'];
+    $hasLatitude = \Drupal::database()->query(' select geo_code_1, geo_code_2 from civicrm_address where contact_id = ' . $id)->fetchAll();
     return $hasLatitude;
   }
 
@@ -212,17 +213,15 @@ class ViewService {
   }
 
   public function getCompanyCibleByAgenceId ($agenceId) {
-    return \Civi\Api4\Relationship::get()
-    ->addWhere('contact_id_b', '=', $agenceId)
-    ->addWhere('relationship_type_id', '=', 32)
-    ->execute()->column('contact_id_a');
+    $db = \Drupal::database();
+    $res = $db->query('select contact_id_b from civicrm_relationship where contact_id_a = ' .   $agenceId . ' and relationship_type_id = 32')->fetchCol();
+    return $res;
   }
 
   public function getContactTypeById ($id) {
-    return \Civi\Api4\Contact::get()
-        ->addSelect('contact_sub_type')
-        ->addWhere('id', '=', $id)
-        ->execute();
+    $db = \Drupal::database();
+    $res = $db->query('select contact_sub_type from civicrm_contact where id = ' . $id)->fetchCol();
+    return $res;
   }
 
   public function getContactNameById($contactId) {
@@ -234,10 +233,13 @@ class ViewService {
 
 
   public function getAllContactIDInGroupDyanmicByGroupID ($groupId) {
-    return \Civi\Api4\Contact::get()
+    /* return \Civi\Api4\Contact::get()
     ->addSelect('id')
     ->addWhere('groups', 'IN', [$groupId])
-    ->execute()->column('id');
+    ->execute()->column('id'); */
+    $db = \Drupal::database();
+    $res = $db->query('select contact_id from civicrm_group_contact_cache where group_id = ' . $groupId)->fetchCol();
+    return $res;
   }
 
   /**
@@ -387,6 +389,41 @@ class ViewService {
     return $contacts_cible_who_are_in_dynamic_group;
   }
 
+  
+ /**
+   * 
+   */
+  public function encryptString($id) {
+    $cipher = 'AES-256-CBC';
+      $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($cipher));
+      $encrypted = openssl_encrypt($id, $cipher, 'makoa_phenix', OPENSSL_RAW_DATA, $iv);
+      return bin2hex($iv . $encrypted);
+  }
+  
+  /**
+   * Redirect to the homepage
+   */
+  public function redirectHomePage () {
+    $response = new \Symfony\Component\HttpFoundation\RedirectResponse(\Drupal\Core\Url::fromRoute('<front>')->toString());
+    return $response->send();
+  }
+  
+  /**
+   * 
+   */
+  public function decryptString($encryptedId) {
+    $cipher = 'AES-256-CBC';
+      $data = hex2bin($encryptedId);
+      $iv = substr($data, 0, openssl_cipher_iv_length($cipher));
+      $encrypted = substr($data, openssl_cipher_iv_length($cipher));
+      $decryptedId = openssl_decrypt($encrypted, $cipher, 'makoa_phenix', OPENSSL_RAW_DATA, $iv);
+  
+    if (!is_numeric($decryptedId)) {
+      return $this->redirectHomePage();
+    }
+  
+    return $decryptedId;
+  }
 /**
  * Undocumented function
  *

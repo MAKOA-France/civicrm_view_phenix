@@ -25,10 +25,11 @@ class ViewServiceQuery {
   }
 
   public function isCompanyLabelSE ($contactId) {
-    return $certificationses = \Civi\Api4\CustomValue::get('Certifications')
+    /* return $certificationses = \Civi\Api4\CustomValue::get('Certifications')
       ->addSelect('nom_certification')
       ->addWhere('entity_id', '=', $contactId)
-      ->execute()->column('nom_certification');
+      ->execute()->column('nom_certification'); */
+      return \Drupal::database()->query('select nom_certification from  civicrm_value_phx_certification where entity_id = ' . $contactId)->fetchCol();
   }
 
   /**
@@ -115,10 +116,9 @@ class ViewServiceQuery {
 
 
   public function getContactOrganizationName ($contactId) {
-    return \Civi\Api4\Contact::get()
-    ->addSelect('organization_name')
-    ->addWhere('id', '=', $contactId)
-    ->execute()->column('organization_name');
+    $db = \Drupal::database();
+    $name = $db->query('select organization_name from civicrm_contact where id = ' . $contactId)->fetchCol();
+    return $name;
   }
 
   /**

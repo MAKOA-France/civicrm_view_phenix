@@ -44,15 +44,18 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
     if ($field->field == 'organization_name' || $field->field == 'legal_name') {
       $current_company_id = $variables['row']->id;
-      $get_contact_type =  \Drupal::service('civicrm_view_phenix.view_services')->getContactTypeById ($current_company_id)->first();
+      $get_contact_type =  \Drupal::service('civicrm_view_phenix.view_services')->getContactTypeById ($current_company_id);
       $font_awesome_html = '';
 
       $agence_icon = '<i class=\'far fa-building pr-12 \'></i>';
 
       $cible_icon = '<i class=\'fas fa-city pr-8 \'></i>';
 
+      $get_contact_type = $get_contact_type[0]; 
+      $get_contact_type = str_replace("\x01", "", $get_contact_type);
+
       if (!empty($get_contact_type)) {
-        $isCible = $get_contact_type['contact_sub_type'][0] == 'Cible';
+        $isCible = $get_contact_type == 'Cible';
         $font_awesome_html = $isCible ? $cible_icon : $agence_icon;
       }
 
@@ -61,33 +64,36 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
       //Override link
       if (!empty($get_contact_type)) {
-        $isCible = $get_contact_type['contact_sub_type'][0] == 'Cible';
+        $isCible = $get_contact_type == 'Cible';
         $font_awesome_html = $isCible ? $cible_icon : $agence_icon;
 
-        $isAgence = $get_contact_type['contact_sub_type'][0] == 'Agence';
+        $isAgence = $get_contact_type == 'Agence';
         $value = $field->getValue($row);
         $current_value_name = is_string($variables['output']) ? $variables['output'] :  $variables['output']->__toString();
 
+      }
+
+      if ($isCible) {
+        $addresseId = \Drupal::database()->query('select id from civicrm_address where contact_id = '. $current_company_id)->fetchCol()[0];
+        $previous_value = $matches[0];
+
+        //en mode anonyme on n'a pas l'identifiant au niveau de l'url donc on l'ajoute
+        if (!preg_match('/\/annuaire\/details\/[0-9]+/', $current_value_name)) {  
+          $current_value_name = preg_replace("/\/annuaire\/details/", "/annuaire/details/" . $current_company_id, $current_value_name);
         }
 
-        if ($isCible) {
-          $addresseId = \Civi\Api4\Address::get()
-          ->addSelect('id')
-          ->addWhere('contact_id', '=', $current_company_id)
-          ->execute()->first()['id'];
-        $previous_value = $matches[0];
-          $current_value_name = str_replace($current_company_id, $idCibleLinkedWithThisAgence[0] . $current_company_id . '?addressId=' . $addresseId, $current_value_name);
-        }
-        $variables['output'] = ['#markup' => '<span class="content-fiche">  ' . $font_awesome_html . $current_value_name . ' &nbsp;'];
+        $current_value_name = str_replace($current_company_id, $idCibleLinkedWithThisAgence[0] . $current_company_id . '?addressId=' . $addresseId, $current_value_name);
       }
+      $variables['output'] = ['#markup' => '<span class="content-fiche">  ' . $font_awesome_html . $current_value_name . ' &nbsp;'];
     }
+  }
 
 
   //Page geographique
   if ($view->storage->id() == 'location_occasion_membres_associes_' && $view->current_display == 'liste_carte') {
     if ($field->field == 'organization_name' || $field->field == 'legal_name' ) {
       $current_company_id = $variables['row']->id;
-      $get_contact_type =  \Drupal::service('civicrm_view_phenix.view_services')->getContactTypeById ($current_company_id)->first();
+      $get_contact_type =  \Drupal::service('civicrm_view_phenix.view_services')->getContactTypeById ($current_company_id);
       $font_awesome_html = '';
 
 
@@ -95,8 +101,12 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
       $cible_icon = '<i class=\'fas fa-city pr-8 \'></i>';
 
+      $get_contact_type = $get_contact_type[0]; 
+      $get_contact_type = str_replace("\x01", "", $get_contact_type);
+
+
       if (!empty($get_contact_type)) {
-        $isCible = $get_contact_type['contact_sub_type'][0] == 'Cible';
+        $isCible = $get_contact_type == 'Cible';
         $font_awesome_html = $isCible ? $cible_icon : $agence_icon;
       }
 
@@ -105,10 +115,10 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
       //Override link
       if (!empty($get_contact_type)) {
-        $isCible = $get_contact_type['contact_sub_type'][0] == 'Cible';
+        $isCible = $get_contact_type == 'Cible';
         $font_awesome_html = $isCible ? $cible_icon : $agence_icon;
 
-        $isAgence = $get_contact_type['contact_sub_type'][0] == 'Agence';
+        $isAgence = $get_contact_type == 'Agence';
         $value = $field->getValue($row);
         $current_value_name = is_string($variables['output']) ? $variables['output'] : $variables['output']->__toString();
 
@@ -120,7 +130,6 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
         }
 
 
-
          if ($isAgence) {
           //Override link
           $idCibleLinkedWithThisAgence = $custom_service->getCompanyCibleByAgenceId($current_company_id);
@@ -129,10 +138,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
           preg_match('/annuaire\/details\/[0-9]+/', $current_value_name, $matches);
 
           if (!empty($matches) && $idCibleLinkedWithThisAgence) {
-            $addresseId = \Civi\Api4\Address::get()
-              ->addSelect('id')
-              ->addWhere('contact_id', '=', $current_company_id)
-              ->execute()->first()['id'];
+            $addresseId = \Drupal::database()->query('select id from civicrm_address where contact_id = '. $current_company_id)->fetchCol()[0];
             $previous_value = $matches[0];
             $current_value_name = str_replace($current_company_id, $idCibleLinkedWithThisAgence[0] . '?agenceId=' . $addresseId, $current_value_name);
           }
@@ -142,12 +148,8 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
            preg_match('/annuaire\/details\/[0-9]+/', $current_value_name, $matches);
 
            if (!empty($matches)) {
-             $addresseId = \Civi\Api4\Address::get()
-               ->addSelect('id')
-               ->addWhere('contact_id', '=', $current_company_id)
-               ->execute()->first()['id'];
-             $previous_value = $matches[0];
-
+            $addresseId = \Drupal::database()->query('select id from civicrm_address where contact_id = '. $current_company_id)->fetchCol()[0];
+            $previous_value = $matches[0];
             $current_value_name = str_replace($current_company_id, $current_company_id . '?addressId=' . $addresseId, $current_value_name);
 
           }
@@ -876,6 +878,7 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
     // $custom_query_service->orderBy ($query, 'contact_id_civicrm_contact.postal_code', 'ASC', 0);
     // $custom_query_service->orderBy ($query, 'contact_id_civicrm_contact.city', 'ASC', 1);
     $custom_query_service->orderBy ($query, 'civicrm_contact.organization_name', 'ASC', 2);
+    
     $custom_service->addWhereQuery ($query, $idscontact, 'civicrm_contact', 'id', 'IN'); //type de contact 'Cible'
      
   }
@@ -1491,7 +1494,8 @@ function civicrm_view_phenix_views_pre_view(Drupal\views\ViewExecutable $view, $
     $contact_id = \Drupal::request()->attributes->get('arg_0');
     $isAnnuaire = $db->query('select * from civicrm_value_phx_org_annuaireenligne where entity_id = ' . $contact_id)->fetch()->org_annuaireenligne_DLR;
     if (!$isAnnuaire) {
-      throw new Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
+      $response = new \Symfony\Component\HttpFoundation\RedirectResponse(Drupal\Core\Url::fromRoute('<front>')->toString());
+      $response->send();
     }
   }
 

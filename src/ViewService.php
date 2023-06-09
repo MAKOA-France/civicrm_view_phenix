@@ -233,13 +233,10 @@ class ViewService {
 
 
   public function getAllContactIDInGroupDyanmicByGroupID ($groupId) {
-    /* return \Civi\Api4\Contact::get()
-    ->addSelect('id')
-    ->addWhere('groups', 'IN', [$groupId])
-    ->execute()->column('id'); */
-    $db = \Drupal::database();
-    $res = $db->query('select contact_id from civicrm_group_contact_cache where group_id = ' . $groupId)->fetchCol();
-    return $res;
+    return \Civi\Api4\Contact::get(FALSE)
+      ->addSelect('id')
+      ->addWhere('groups', 'IN', [$groupId])
+      ->execute()->column('id');
   }
 
   /**
@@ -345,43 +342,46 @@ class ViewService {
     return array_column($allContactId, 'id');
   }
 
+
+  /**
+   * Recuperation des contacts agences liés avec des cibles dlr 
+   */
   public function geographiqueGetAllAgencesLinkedWithCibleDlr () {
-    //Les agences liées à des cibles DLR membres actuels
-    $contacts_cible_who_are_in_dynamic_group = $this->getAllContactIDInGroupDyanmicByGroupID(ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT);
-  // $contacts_cible_who_are_in_dynamic_group = implode (',', $contacts_cible_who_are_in_dynamic_group); 
-    if ($contacts_cible_who_are_in_dynamic_group) {
+    //Recuperation des id contact qui sont membre dlr (membership_type_id = 1) et status_id (nouveau , courant, delai de grace, en instance)
+    $queryMember = 'select distinct contact_id from civicrm_membership where status_id IN (1,2,3,5 ) and membership_type_id = 1;';
+    $resMember = \Drupal::database()->query($queryMember)->fetchAll();
+    $resMember = array_column($resMember, 'contact_id');
+    $resMember = implode(', ', $resMember);
 
-     $all_agence_id_linked_whith_cible_dlr = \Civi\Api4\Relationship::get()
-       ->addSelect('contact_id_b')
-       ->addWhere('contact_id_a', 'IN', $contacts_cible_who_are_in_dynamic_group)
-       ->execute();
-       $ids = $all_agence_id_linked_whith_cible_dlr->column('contact_id_');
-     $ids = implode(', ', $ids);
-     $string_query = 'SELECT C.id from civicrm_contact as C
-   left join civicrm_membership as M ON M.contact_id = C.id
-   left join civicrm_value_phx_org_annuaireenligne AN ON C.id = AN.entity_id
+    //Recuperation des agences
+    $queryRelation = 'select contact_id_a from civicrm_relationship where relationship_type_id = 32 and contact_id_b in (' . $resMember . ')';
+    $queryRelation = \Drupal::database()->query($queryRelation)->fetchAll();
+    $queryRelation = array_column($queryRelation, 'contact_id_a');
+    $ids = implode(', ', $queryRelation);
 
-   left join civicrm_address as A ON A.contact_id = C.id
-    left join civicrm_phone as P ON P.contact_id = C.id
+    $string_query = 'SELECT C.id from civicrm_contact as C
+      left join civicrm_value_phx_org_annuaireenligne AN ON C.id = AN.entity_id
 
-   WHERE C.contact_sub_type = \'Agence\'
-    AND C.contact_type = \'Organization\'
-    AND AN.org_annuaireenligne_DLR = 1
-    AND A.is_primary = 1
-    AND P.is_primary = 1
-   -- AND A.city IS NOT NULL
-   AND C.is_deleted = 0
-   -- AND A.postal_code IS NOT NULL
-    AND A.geo_code_1 IS NOT NULL';
+      left join civicrm_address as A ON A.contact_id = C.id
+      left join civicrm_phone as P ON P.contact_id = C.id
+
+      WHERE C.contact_sub_type = \'Agence\'
+        AND C.contact_type = \'Organization\'
+        AND AN.org_annuaireenligne_DLR = 1
+        AND A.is_primary = 1
+        AND P.is_primary = 1
+      -- AND A.city IS NOT NULL
+        AND C.is_deleted = 0
+      -- AND A.postal_code IS NOT NULL
+        AND A.geo_code_1 IS NOT NULL';
 
 
-   if ($ids) {
-     $string_query .= ' AND C.id IN (' . $ids . ')';
-   }
+  if ($ids) {
+    $string_query .= ' AND C.id IN (' . $ids . ')';
+  }
 
-   $allContactId =  \Drupal::database()->query($string_query)->fetchAll();
-   return array_column($allContactId, 'id');
-   } 
+  $allContactId =  \Drupal::database()->query($string_query)->fetchAll();
+  return array_column($allContactId, 'id');
  }
 
   public function CibleMembreActuel () {
@@ -419,11 +419,97 @@ class ViewService {
       $decryptedId = openssl_decrypt($encrypted, $cipher, 'makoa_phenix', OPENSSL_RAW_DATA, $iv);
   
     if (!is_numeric($decryptedId)) {
-      return $this->redirectHomePage();
+      // return $this->redirectHomePage();
     }
   
     return $decryptedId;
   }
+
+/**
+ * 
+ */
+public function getNameEntrepriseById ($idContact) {
+  $legalName = \Civi\Api4\Contact::get(FALSE)
+  ->addSelect('legal_name')
+  ->addWhere('id', '=', $idContact)
+  ->execute()->first()['legal_name'];
+  if ($legalName) {
+    return $legalName;
+  }
+  $display_name = \Civi\Api4\Contact::get(FALSE)
+  ->addSelect('display_name')
+  ->addWhere('id', '=', $idContact)
+  ->execute()->first()['display_name'];
+  return $display_name;
+}
+
+
+/**
+ * Contac Cible dlr membre standard actuel
+ */
+public function getAdherentMembreStandardActuel () {
+  $cibles = \Civi\Api4\Contact::get(FALSE)
+  ->addSelect('id')
+  ->addJoin('Membership AS membership', 'LEFT')
+  ->addWhere('membership.membership_type_id', '=', 1)
+  ->addWhere('contact_type', '=', 'Organization')
+  ->addWhere('contact_sub_type', '=', 'Cible')
+  ->addWhere('is_deleted', '=', FALSE)
+  ->addWhere('membership.status_id', 'IN', [1, 3, 5, 2])
+  ->addWhere('org_annuaireenligne.annuaireenligne_DLR', '=', 1)
+  ->addWhere('membership.owner_membership_id', 'IS EMPTY')
+  ->execute()->getIterator();
+  $cibles = iterator_to_array($cibles); 
+  $cibles = array_column($cibles, 'id'); 
+  
+  return $cibles;
+}
+
+/**
+ * Contact cible membre associés
+ */
+public function getContactCibleMembreAssocies () {
+  $cibleAssocie = \Civi\Api4\Contact::get(FALSE)
+  ->addSelect('id')
+  ->addJoin('Membership AS membership', 'LEFT')
+  ->addWhere('membership.membership_type_id', 'IN', [2, 3, 4])
+  ->addWhere('contact_type', '=', 'Organization')
+  ->addWhere('contact_sub_type', '=', 'Cible')
+  ->addWhere('is_deleted', '=', FALSE)
+  ->addWhere('membership.status_id', 'IN', [1, 3, 5, 2])
+  ->addWhere('org_annuaireenligne.annuaireenligne_DLR', '=', 1)
+  ->execute()->getIterator();
+  $cibleAssocie = iterator_to_array($cibleAssocie); 
+  $cibleAssocie = array_column($cibleAssocie, 'id'); 
+  return $cibleAssocie;
+}
+
+
+/**
+ * Tous les ids contact dans alphabetique
+ */
+public function getContactAlphabetique () {
+  $contacts = \Civi\Api4\Contact::get(FALSE)
+  ->addSelect('id')
+  ->addJoin('Membership AS membership', 'LEFT')
+  ->addJoin('Address AS address', 'LEFT', ['address.is_primary', '=', 1])
+  ->addJoin('Phone AS phone', 'LEFT', ['phone.is_primary', '=', 1])
+  ->addWhere('membership.membership_type_id', '=', 1)
+  ->addWhere('contact_type', '=', 'Organization')
+  ->addWhere('contact_sub_type', '=', 'Cible')
+  ->addWhere('is_deleted', '=', FALSE)
+  ->addWhere('membership.status_id', 'IN', [1, 2, 3, 5])
+  ->addWhere('org_annuaireenligne.annuaireenligne_DLR', '=', 1)
+  ->execute()->getIterator();
+  $contacts = iterator_to_array($contacts);
+  if ($contacts) {
+    $idscontact = array_column($contacts, 'id');
+    return $idscontact;
+  }
+  return [];
+}
+
+
 /**
  * Undocumented function
  *
@@ -501,106 +587,106 @@ class ViewService {
     return
     [
       'All' => t('Choisir departement'),
-      '01' =>  'Ain',
-      '02' =>  'Aisne',
-      '03' =>  'Allier',
-      '04' =>  'Alpes-de-Haute-Provence',
-      '05' =>  'Hautes-Alpes',
-      '06' =>  'Alpes-Maritimes',
-      '07' =>  'Ardèche',
-      '08' =>  'Ardennes',
-      '09' =>  'Ariège',
-      '10' => 'Aube',
-      '11' => 'Aude',
-      '12' => 'Aveyron',
-      '13' => 'Bouches-du-Rhône',
-      '14' => 'Calvados',
-      '15' => 'Cantal',
-      '16' => 'Charente',
-      '17' => 'Charente-Maritime',
-      '18' => 'Cher',
-      '19' => 'Corrèze',
-      '2A' => 'Corse-du-Sud',
-      '2B' => 'Haute-Corse',
-      '21' => 'Côte-dOr',
-      '22' => 'Côtes-dArmor',
-      '23' => 'Creuse',
-      '24' => 'Dordogne',
-      '25' => 'Doubs',
-      '26' => 'Drôme',
-      '27' => 'Eure',
-      '28' => 'Eure-et-Loir',
-      '29' => 'Finistère',
-      '30' => 'Gard',
-      '31' => 'Haute-Garonne',
-      '32' => 'Gers',
-      '33' => 'Gironde',
-      '34' => 'Hérault',
-      '35' => 'Ille-et-Vilaine',
-      '36' => 'Indre',
-      '37' => 'Indre-et-Loire',
-      '38' => 'Isère',
-      '39' => 'Jura',
-      '40' => 'Landes',
-      '41' => 'Loir-et-Cher',
-      '42' => 'Loire',
-      '43' => 'Haute-Loire',
-      '44' => 'Loire-Atlantique',
-      '45' => 'Loiret',
-      '46' => 'Lot',
-      '47' => 'Lot-et-Garonne',
-      '48' => 'Lozère',
-      '49' => 'Maine-et-Loire',
-      '50' => 'Manche',
-      '51' => 'Marne',
-      '52' => 'Haute-Marne',
-      '53' => 'Mayenne',
-      '54' => 'Meurthe-et-Moselle',
-      '55' => 'Meuse',
-      '56' => 'Morbihan',
-      '57' => 'Moselle',
-      '58' => 'Nièvre',
-      '59' => 'Nord',
-      '60' => 'Oise',
-      '61' => 'Orne',
-      '62' => 'Pas-de-Calais',
-      '63' => 'Puy-de-Dôme',
-      '64' => 'Pyrénées-Atlantiques',
-      '65' => 'Hautes-Pyrénées',
-      '66' => 'Pyrénées-Orientales',
-      '67' => 'Bas-Rhin',
-      '68' => 'Haut-Rhin',
-      '69' => 'Rhône',
-      '70' => 'Haute-Saône',
-      '71' => 'Saône-et-Loire',
-      '72' => 'Sarthe',
-      '73' => 'Savoie',
-      '74' => 'Haute-Savoie',
-      '75' => 'Paris',
-      '76' => 'Seine-Maritime',
-      '77' =>  'Seine-et-Marne',
-      '78' =>  'Yvelines',
-      '79' =>  'Deux-Sèvres',
-      '80' =>  'Somme',
-      '81' =>  'Tarn',
-      '82' =>  'Tarn-et-Garonne',
-      '83' =>  'Var',
-      '84' =>  'Vaucluse',
-      '85' =>  'Vendée',
-      '86' =>  'Vienne',
-      '87' =>  'Haute-Vienne',
-      '88' =>  'Vosges',
-      '89' =>  'Yonne',
-      '90' =>  'Territoire de Belfort',
-      '91' =>  'Essonne',
-      '92' =>  'Hauts-de-Seine',
-      '93' =>  'Seine-Saint-Denis',
-      '94' =>  'Val-de-Marne',
-      '95' =>  'Val-dOise',
-      '971' =>  'Guadeloupe',
-      '972' =>  'Martinique',
-      '973' =>  'Guyane',
-      '974' =>  'La Réunion'
+      '01' =>  'Ain - 01',
+      '02' =>  'Aisne - 02',
+      '03' =>  'Allier - 03',
+      '04' =>  'Alpes-de-Haute-Provence - 04',
+      '05' =>  'Hautes-Alpes - 05',
+      '06' =>  'Alpes-Maritimes - 06',
+      '07' =>  'Ardèche - 07',
+      '08' =>  'Ardennes - 08',
+      '09' =>  'Ariège - 09',
+      '10' => 'Aube - 10',
+      '11' => 'Aude - 11',
+      '12' => 'Aveyron - 12',
+      '13' => 'Bouches-du-Rhône - 13',
+      '14' => 'Calvados - 14',
+      '15' => 'Cantal - 15',
+      '16' => 'Charente - 16',
+      '17' => 'Charente-Maritime - 17',
+      '18' => 'Cher - 18',
+      '19' => 'Corrèze - 19',
+      '2A' => 'Corse-du-Sud - 2A',
+      '2B' => 'Haute-Corse - 2B',
+      '21' => 'Côte-dOr - 21',
+      '22' => 'Côtes-dArmor - 22',
+      '23' => 'Creuse - 23',
+      '24' => 'Dordogne - 24',
+      '25' => 'Doubs - 25',
+      '26' => 'Drôme - 26',
+      '27' => 'Eure - 27',
+      '28' => 'Eure-et-Loir - 28',
+      '29' => 'Finistère - 29',
+      '30' => 'Gard - 30',
+      '31' => 'Haute-Garonne - 31',
+      '32' => 'Gers - 32',
+      '33' => 'Gironde - 33',
+      '34' => 'Hérault - 34',
+      '35' => 'Ille-et-Vilaine - 35',
+      '36' => 'Indre - 36',
+      '37' => 'Indre-et-Loire - 37',
+      '38' => 'Isère - 38',
+      '39' => 'Jura - 39',
+      '40' => 'Landes - 40',
+      '41' => 'Loir-et-Cher - 41',
+      '42' => 'Loire - 42',
+      '43' => 'Haute-Loire - 43',
+      '44' => 'Loire-Atlantique - 44',
+      '45' => 'Loiret - 45',
+      '46' => 'Lot - 46',
+      '47' => 'Lot-et-Garonne - 47',
+      '48' => 'Lozère - 48',
+      '49' => 'Maine-et-Loire - 49',
+      '50' => 'Manche - 50',
+      '51' => 'Marne - 51',
+      '52' => 'Haute-Marne - 52',
+      '53' => 'Mayenne - 53',
+      '54' => 'Meurthe-et-Moselle - 54',
+      '55' => 'Meuse - 55',
+      '56' => 'Morbihan - 56',
+      '57' => 'Moselle - 57',
+      '58' => 'Nièvre - 58',
+      '59' => 'Nord - 59',
+      '60' => 'Oise - 60',
+      '61' => 'Orne - 61',
+      '62' => 'Pas-de-Calais - 62',
+      '63' => 'Puy-de-Dôme - 63',
+      '64' => 'Pyrénées-Atlantiques - 64',
+      '65' => 'Hautes-Pyrénées - 65',
+      '66' => 'Pyrénées-Orientales - 66',
+      '67' => 'Bas-Rhin - 67',
+      '68' => 'Haut-Rhin - 68',
+      '69' => 'Rhône - 69',
+      '70' => 'Haute-Saône - 70',
+      '71' => 'Saône-et-Loire - 71',
+      '72' => 'Sarthe - 72',
+      '73' => 'Savoie - 73',
+      '74' => 'Haute-Savoie - 74',
+      '75' => 'Paris - 75',
+      '76' => 'Seine-Maritime - 76',
+      '77' =>  'Seine-et-Marne - 77',
+      '78' =>  'Yvelines - 78',
+      '79' =>  'Deux-Sèvres - 79',
+      '80' =>  'Somme - 80',
+      '81' =>  'Tarn - 81',
+      '82' =>  'Tarn-et-Garonne - 82',
+      '83' =>  'Var - 83',
+      '84' =>  'Vaucluse - 84',
+      '85' =>  'Vendée - 85',
+      '86' =>  'Vienne - 86',
+      '87' =>  'Haute-Vienne - 87',
+      '88' =>  'Vosges - 88',
+      '89' =>  'Yonne - 89',
+      '90' =>  'Territoire de Belfort - 90',
+      '91' =>  'Essonne - 91',
+      '92' =>  'Hauts-de-Seine - 92',
+      '93' =>  'Seine-Saint-Denis - 93',
+      '94' =>  'Val-de-Marne - 94',
+      '95' =>  'Val-dOise - 95',
+      '971' =>  'Guadeloupe - 971',
+      '972' =>  'Martinique - 972',
+      '973' =>  'Guyane - 973',
+      '974' =>  'La Réunion - 974'
     ];
   }
 

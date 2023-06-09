@@ -1,6 +1,11 @@
 <?php
 
+use Drupal\block\BlockInterface;
 use Drupal\civicrm_view_phenix\ViewService;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
 use Drupal\views\Views;
 use Drupal\webprofiler\Views\ViewExecutableFactoryWrapper;
 use GuzzleHttp\Psr7\Request;
@@ -81,8 +86,8 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
         if (!preg_match('/\/annuaire\/details\/[0-9]+/', $current_value_name)) {  
           $current_value_name = preg_replace("/\/annuaire\/details/", "/annuaire/details/" . $current_company_id, $current_value_name);
         }
-
-        $current_value_name = str_replace($current_company_id, $idCibleLinkedWithThisAgence[0] . $current_company_id . '?addressId=' . $addresseId, $current_value_name);
+        $encryptedID = $custom_service->encryptString($current_company_id);
+        $current_value_name = str_replace($current_company_id, $idCibleLinkedWithThisAgence[0] . $current_company_id . '?addressId=' . $addresseId. '&token=' . $encryptedID, $current_value_name);
       }
       $variables['output'] = ['#markup' => '<span class="content-fiche">  ' . $font_awesome_html . $current_value_name . ' &nbsp;'];
     }
@@ -140,17 +145,18 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
           if (!empty($matches) && $idCibleLinkedWithThisAgence) {
             $addresseId = \Drupal::database()->query('select id from civicrm_address where contact_id = '. $current_company_id)->fetchCol()[0];
             $previous_value = $matches[0];
-            $current_value_name = str_replace($current_company_id, $idCibleLinkedWithThisAgence[0] . '?agenceId=' . $addresseId, $current_value_name);
+            $encrypted_id = $custom_service->encryptString($current_company_id);
+            $current_value_name = str_replace($current_company_id, $encrypted_id . '?agenceId=' . $addresseId, $current_value_name);
           }
         }else {
 
            //regex Todo refactoring
            preg_match('/annuaire\/details\/[0-9]+/', $current_value_name, $matches);
-
+           $encrypted_id = $custom_service->encryptString($current_company_id);
            if (!empty($matches)) {
             $addresseId = \Drupal::database()->query('select id from civicrm_address where contact_id = '. $current_company_id)->fetchCol()[0];
             $previous_value = $matches[0];
-            $current_value_name = str_replace($current_company_id, $current_company_id . '?addressId=' . $addresseId, $current_value_name);
+            $current_value_name = str_replace($current_company_id, $encrypted_id . '?addressId=' . $addresseId, $current_value_name);
 
           }
         }
@@ -234,7 +240,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
       $dirigeant_name_2 = '';
 
 
-      $allContactsLinkedWithCompany = \Civi\Api4\Relationship::get()
+      $allContactsLinkedWithCompany = \Civi\Api4\Relationship::get(FALSE)
         ->addSelect('contact_id_a')
         ->addWhere('contact_id_b', '=', $company_id)
         ->execute()->column('contact_id_a');
@@ -280,7 +286,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
       //check if the company is French
       $companyISinFrance = false;
-      $isInFrance = \Civi\Api4\Address::get()
+      $isInFrance = \Civi\Api4\Address::get(FALSE)
       ->addSelect('country_id', 'country_id:label')
       ->addWhere('contact_id', '=', $company_id)
       ->execute();
@@ -294,6 +300,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
       $hasLatitudeAndLongitude = $custom_service->checkIfCompanyHasLatAndLongitude($company_id);//don't display map if there is no marker
       $view['#attributes']['class'][] = 'custom-view-embeded-map';
       $view['#attributes']['class'][] = $custom_class;
+      $view['#arguments'][0] = $company_id;
       $view_rendered = $hasLatitudeAndLongitude ? \Drupal::service('renderer')->render($view) : '';
 
       $all_agences = $custom_service->getAgenceLinkedWithCompany($company_id);
@@ -301,7 +308,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
       if (!empty($all_agences)) {
         $all_agences_ids = array_column($all_agences, 'contact_id_a');
         //Gel all lat/long
-        $all_lat_long_result = \Civi\Api4\Address::get()
+        $all_lat_long_result = \Civi\Api4\Address::get(FALSE)
           ->addSelect('geo_code_1', 'geo_code_2')
           ->addWhere('contact_id', 'IN', $all_agences_ids)
           ->execute();
@@ -517,7 +524,7 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
     $custom_service->addWhereQuery ($query, 'Cible', 'civicrm_contact', 'contact_sub_type', '='); //Contact de type Cible
 
 
-    $contacts_who_are_in_dynamic_group = \Civi\Api4\Contact::get()
+    $contacts_who_are_in_dynamic_group = \Civi\Api4\Contact::get(FALSE)
     ->addSelect('id')
     ->addWhere('groups', 'IN', [ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT])
     ->execute()->column('id');
@@ -715,14 +722,14 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
     //alter query champ Annuaire en ligne = OUI  Pour les organisations
     $custom_service->addWhereQuery ($query, 1, 'civicrm_value_phx_org_annuaireenligne', 'org_annuaireenligne_DLR', '=');
 
-    $contacts_who_are_in_dynamic_group = \Civi\Api4\Contact::get()
+    $contacts_who_are_in_dynamic_group = \Civi\Api4\Contact::get(FALSE)
     ->addSelect('id')
     ->addWhere('groups', 'IN', [ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_ET_AGENCES])
     ->execute()->column('id');
 
 
     //Récupère les contact de type cible filtrer par adhérents/ville/telephone/adresse principale/
-    $id_contact_cibles_already_filtered = $custom_service->getContactIdByBasicCommonGenericQueryFilters();
+    $id_contact_cibles_already_filtered = $custom_service->getAdherentMembreStandardActuel();
 
     $contacts_who_are_in_dynamic_group = $custom_service->getAllContactIDInGroupDyanmicByGroupID(ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT);
     $contacts_who_are_in_dynamic_group = implode (',', $contacts_who_are_in_dynamic_group);
@@ -781,20 +788,6 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
 
     if (!empty($get_query->get('filter_by_deprtmt') && $get_query->get('filter_by_deprtmt') != 'All')) {
       $department_ids = $get_query->get('filter_by_deprtmt');
-      /* $departments = \Drupal::database()->query("SELECT adr.postal_code  FROM civicrm_address as adr LEFT JOIN civicrm_contact as c on c.id = adr.contact_id WHERE
-      c.contact_type = 'Organization' and
-      adr.postal_code LIKE '". $departmentId . "%'");
-      $departments = $departments->fetchAll(); */
-      /*  $query->where[] =  array(
-         'conditions' => array(
-           array(
-             'field' => 'contact_id_civicrm_contact.postal_code',
-                'value' => ''. trim($departmentId) .'%',
-                'operator' => 'LIKE',
-              ),
-            ),
-            'type' => 'AND',
-          ); */
 
       //filter by departement by select multiple
       $conditions = [];
@@ -825,31 +818,21 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
     $join = Drupal::service('plugin.manager.views.join')->createInstance('standard', $definition);
     $query->addRelationship('civicrm_contact', $join,'civicrm_contact');
 
-    // $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_group_contact', 'civicrm_group_contact_alias', 'contact_id', 'id' );
-
-    //filter CIBLES  (but not agences) by membership status --> statut IN [en instance, courant, nouveau, délai de grace]
-   // $custom_service->addWhereQuery ($query,   [1, 2, 3, 4], 'civicrm_contact_1', 'membership_type_id', 'IN'); //filtrer par adhérents
-
-  /*   $custom_service->addWhereQuery ($query, 'Organization', 'civicrm_contact', 'contact_type', '='); // type de contact
-    $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'geo_code_1', 'IS NOT NULL');  //latitude is not null
-    $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'city', 'IS NOT NULL'); // Ville pas vide
-    $custom_service->addWhereQuery ($query, '0', 'civicrm_contact', 'is_deleted', '='); // entreprise qui n'est pas dans la corbeille
-    $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'postal_code', '!='); // Code postal pas vide
-
-    $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_value_phx_org_annuaireenligne', 'civicrm_value_phx_org_annuaireenligne', 'entity_id', 'id') ;
-    $custom_service->addWhereQuery ($query, 1, 'civicrm_value_phx_org_annuaireenligne', 'org_annuaireenligne_DLR', '='); */
-
-    //Récupère les contact de type cible filtrer par adhérents/ville/telephone/adresse principale/
-    $id_contact_cibles_already_filtered = $custom_service->getContactIdByBasicCommonGenericQueryFilters();
-
-    //Les agences liées à des cibles DLR membres actuels
-    $all_agence_id_linked_whith_cible_dlr = $custom_service->geographiqueGetAllAgencesLinkedWithCibleDlr();
-
-
-    if ($all_agence_id_linked_whith_cible_dlr) {
-        $all_agence_id_linked_whith_cible_dlr = array_unique(array_merge($all_agence_id_linked_whith_cible_dlr, $id_contact_cibles_already_filtered), SORT_REGULAR);
-        $custom_service->addWhereQuery ($query, $all_agence_id_linked_whith_cible_dlr, 'civicrm_contact', 'id', 'IN');
-    }
+     //Contact cible dlr membre standard actuel
+     $id_contact_cibles_already_filtered = $custom_service->getAdherentMembreStandardActuel();
+    
+     //Contact Cible dlr membre associés
+     $id_contact_cibles_membre_associe = $custom_service->getContactCibleMembreAssocies();
+ 
+ 
+     //Les agences liées à des cibles DLR membres actuels
+     $all_agence_id_linked_whith_cible_dlr = $custom_service->geographiqueGetAllAgencesLinkedWithCibleDlr();
+ 
+ 
+     if ($all_agence_id_linked_whith_cible_dlr) {
+         $all_agence_id_linked_whith_cible_dlr = array_unique(array_merge($all_agence_id_linked_whith_cible_dlr, $id_contact_cibles_already_filtered, $id_contact_cibles_membre_associe), SORT_REGULAR);
+         $custom_service->addWhereQuery ($query, $all_agence_id_linked_whith_cible_dlr, 'civicrm_contact', 'id', 'IN');
+     }
 
     //sorting
     //$custom_query_service->orderBy ($query, 'contact_id_civicrm_contact.postal_code', 'ASC', 0);
@@ -860,27 +843,14 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
 
   //Query alter page Alphabétique
   if ($view->storage->get('id') == 'location_occasion_membres_associes_' && $view->current_display == 'page_5') {
-    $custom_service->innerJoinTable($query, 'civicrm_contact', 'civicrm_membership', 'civicrm_membership', 'contact_id', 'id') ;
-    $custom_service->joinTable($query, 'civicrm_contact', 'civicrm_value_phx_org_annuaireenligne', 'civicrm_value_phx_org_annuaireenligne', 'entity_id', 'id') ;
-    $custom_service->addWhereQuery ($query,   [1], 'civicrm_membership', 'membership_type_id', 'IN'); //filtrer par adhérents
-    
-    $custom_service->addWhereQuery ($query, 'Organization', 'civicrm_contact', 'contact_type', '='); // contact de type "organization"
-    $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'geo_code_1', 'IS NOT NULL');  //latitude is not null
-    $custom_service->addWhereQuery ($query, '0', 'civicrm_contact', 'is_deleted', '='); // entreprise qui n'est pas dans la corbeille
-    // $custom_service->addWhereQuery ($query, '1', 'contact_id_civicrm_contact_1', 'is_primary', '='); //Téléphone principale = true
-    // $custom_service->addWhereQuery ($query, '1', 'contact_id_civicrm_contact', 'is_primary', '='); //adresse principale = true
-    // $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'city', 'IS NOT NULL'); // Ville pas vide
-    // $custom_service->addWhereQuery ($query, '', 'contact_id_civicrm_contact', 'postal_code', '!='); // Code postal pas vide
-    $custom_service->addWhereQuery ($query, 'Cible', 'civicrm_contact', 'contact_sub_type', '='); //type de contact 'Cible'
-    $custom_service->addWhereQuery ($query, 1, 'civicrm_value_phx_org_annuaireenligne', 'org_annuaireenligne_DLR', '='); //Annuaire en ligne
-    $idscontact = $custom_service->getAllContactIDInGroupDyanmicByGroupID(ViewService::GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT);
-    
+      $idscontact = $custom_service->getContactAlphabetique();
+      
     // $custom_query_service->orderBy ($query, 'contact_id_civicrm_contact.postal_code', 'ASC', 0);
     // $custom_query_service->orderBy ($query, 'contact_id_civicrm_contact.city', 'ASC', 1);
     $custom_query_service->orderBy ($query, 'civicrm_contact.organization_name', 'ASC', 2);
-    
-    $custom_service->addWhereQuery ($query, $idscontact, 'civicrm_contact', 'id', 'IN'); //type de contact 'Cible'
-     
+    if ($idscontact) {
+      $custom_service->addWhereQuery ($query, $idscontact, 'civicrm_contact', 'id', 'IN'); //type de contact 'Cible'
+    }
   }
   
 
@@ -948,6 +918,7 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
 
 
     $current_contact_id = $request->get('arg_0');
+    // $current_contact_id = $custom_service->decryptString($current_contact_id);
     $relationships = civicrm_api3('Relationship', 'get', [
       'contact_id_b' => $current_contact_id,
       'contact_id_a.contact_type' => "Organization",
@@ -1384,6 +1355,8 @@ function civicrm_view_phenix_preprocess_views_view(&$vars) {
     }
 
     if ($view->storage->id() == 'fiche' && ($view->current_display == 'page_2')) {
+      $contact_id = \Drupal::request()->attributes->get('arg_0');
+      $contact_id = $custom_service->decryptString($contact_id);
       $entity = $view->result[0]->_entity;
       $legal_name = $custom_service->getNodeFieldValue($entity, 'legal_name');
       $view->element['view_build']['#title']['#markup'] = $legal_name;
@@ -1487,13 +1460,26 @@ function civicrm_view_phenix_views_pre_render(Drupal\views\ViewExecutable  $view
 
 function civicrm_view_phenix_views_pre_view(Drupal\views\ViewExecutable $view, $display_id, array &$args) {
 
-
+  $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
   $db = \Drupal::database();
   //On n'affiche pas la page si ce n'est pas un adhérent
   if (($view->id() == 'fiche') && ($display_id == 'page_2')) {
+
     $contact_id = \Drupal::request()->attributes->get('arg_0');
+    // redirection si quelqu'un tente de modifier à la main le token au niveau de l'url
+    $get_token = \Drupal::request()->query->get('token');
+    $decrypted_token = $custom_service->decryptString($get_token);
+    if (!$decrypted_token) {
+      $custom_service->redirectHomePage();
+    }
+  
+    $view->args[0] = $contact_id;//TODOHINT
     $isAnnuaire = $db->query('select * from civicrm_value_phx_org_annuaireenligne where entity_id = ' . $contact_id)->fetch()->org_annuaireenligne_DLR;
+    $token_get = \Drupal::request()->get('token');
+    $descripted_token = $custom_service->decryptString('32f0c8a4aae9d7fdf791556e14aa4c07152f274df9945e6a6c4b5f98adbfffd88cf6');//todo hint
+    
     if (!$isAnnuaire) {
+      // throw new Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
       $response = new \Symfony\Component\HttpFoundation\RedirectResponse(Drupal\Core\Url::fromRoute('<front>')->toString());
       $response->send();
     }
@@ -1627,5 +1613,57 @@ function civicrm_view_phenix_preprocess_menu(&$variables){
 function civicrm_view_phenix_webform_element_alter(array &$element, \Drupal\Core\Form\FormStateInterface $form_state, array $context) {
   if ($form_state->getBuildInfo()['form_id'] == 'webform_submission_demande_effectifs_phenix_v2_test_form') {
     
+  }
+}
+
+
+/**
+ * Implements hook_node_access().
+ */
+function civicrm_view_phenix_node_access(NodeInterface $node, $op, AccountInterface $account) {
+  // Specify the node IDs for which you want to grant access to anonymous users.
+  $allowed_node_ids = [611, 607]; // Add the node IDs here.
+
+  $domain = \Drupal::request()->getHost();
+
+  // Get the requested URL path.
+  $currentUrl = \Drupal::request()->getRequestUri();
+
+
+  //Rediriger la page d'accueil vers la page annuaire si c'est le domaine d'annuaire
+  if (($currentUrl == '/') && $domain == 'annuairedlr.fr') {
+    // Redirect to a specific URL.
+    $response = new \Symfony\Component\HttpFoundation\RedirectResponse(Drupal\Core\Url::fromUri('internal:/annuaire')->toString());
+    $response->send();
+  }
+
+  if ((strpos($currentUrl, '/annuaire') !== false) &&  ($domain == 'extranet.dlr.fr')) {
+    // $response = new \Symfony\Component\HttpFoundation\RedirectResponse('https://extranet.dlr.fr');
+    // $response->send();
+  }
+
+  
+  if ($account->isAnonymous()) {
+    // Perform actions specific to anonymous users.
+    if (in_array($node->id(), $allowed_node_ids) && $op == 'view' && $account->isAnonymous()) {
+      return AccessResult::allowed();
+    }
+    
+    // Default behavior for other nodes and operations.
+    return AccessResult::forbidden();
+  }
+}
+
+
+use Drupal\taxonomy\TermInterface;
+
+/**
+ * Implements hook_taxonomy_term_access().
+ * Si c'est un utilisateur anonyme et que c'est la page des taxonomies on redirige vers la page d'accueil
+ */
+function civicrm_view_phenix_taxonomy_term_access(TermInterface $term, $operation, AccountInterface $account) {
+  if ($account->isAnonymous()) {
+    $response = new \Symfony\Component\HttpFoundation\RedirectResponse(Drupal\Core\Url::fromUri('internal:/')->toString());
+    $response->send();
   }
 }

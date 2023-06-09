@@ -29,10 +29,10 @@ class CompanyProfileSecondProfile  extends BlockBase  {
     $mainActivity = $database->query('select  label from civicrm_option_value where value  = ' . $idMainActivity[0] . ' and option_group_id = 100')->fetchCol();
     $equipmentRental = $database->query('select materiel_location from civicrm_value_phx_materiel where entity_id = ' . $id)->fetchCol();
     
-    $contacts = \Civi\Api4\Contact::get()
+    /* $contacts = \Civi\Api4\Contact::get()
       ->addSelect('org_dlr.descriptif_entreprise', 'org_dlr.activiteprincipale', 'Materiel.nom_location')
       ->addWhere('id', '=', $id)
-      ->execute();
+      ->execute(); */
       $description = '';
       if ($idMainActivity) {
         $description = $database->query('select org_dlr_descriptif_entreprise from civicrm_value_phx_org_dlr where entity_id = ' . $id)->fetchCol()[0];
@@ -44,13 +44,24 @@ class CompanyProfileSecondProfile  extends BlockBase  {
         $isThereAnyLocation = false;
         if ($equipmentRental) {
           $equipmentRental = str_replace("\x01", "", $equipmentRental);
-          $rentals = $database->query('SELECT label FROM civicrm_option_value where option_group_id = 106 and  value IN (' . $equipmentRental . ') order by label asc')->fetchAll();
+          
+          $rentals = \Civi\Api4\Contact::get(FALSE)
+            ->addSelect('Materiel.nom_location:label')
+            ->addWhere('id', '=', $id)
+            ->execute()->getIterator();
+      
+            $rentals = iterator_to_array($rentals); 
+
           $materielLocation = '<div class="field-content occasion-details content-fiche"><ul>';
           
           $isThereAnyLocation = !empty($rentals) ? true : false;
-          foreach ($rentals as $rental) {
-             $materielLocation .= '<li class="content-fiche">' . $rental->label. '</li>';
+          $whitelistLocation = $this->getAllActiveMaterielLocation();
+          foreach ($rentals[0]['Materiel.nom_location:label'] as $rental) {
+            if (!in_array($rental, $whitelistLocation)) {
+              $materielLocation .= '<li class="content-fiche">' . $rental. '</li>';
+            }
           }
+
 
           $materielLocation .= '</ul></div>';
 
@@ -173,6 +184,21 @@ class CompanyProfileSecondProfile  extends BlockBase  {
    */
   public function getCacheMaxAge() {
     return 0;
+  }
+
+  /**
+   * Recupere les matériel location active
+   */
+  private function getAllActiveMaterielLocation() {
+    $location = \Civi\Api4\OptionValue::get(FALSE)
+    ->addSelect('label')
+    ->addWhere('option_group_id', '=', 106)
+    ->addWhere('is_active', '=', 0)
+    ->execute();
+    $location = iterator_to_array($location); 
+    $location = array_column($location, 'label');
+    return $location;
+
   }
 
 }

@@ -120,6 +120,35 @@
 
     $('.filter-by-brand').once('leaflet').on('click', function(){
       let brandValue = $('.marque-nom-copy').val();
+      let last_materiel_occ = $('[name="materiel_occasion"]').val();
+
+
+      if (last_materiel_occ != 'All') {
+        if (!queryString) {
+          return location.href = window.location.href + '?materiel_occasion=' + last_materiel_occ;
+        }
+        if (!brandValue) {
+
+          let matchedUrl = queryString.match(/materiel_occasion=[0-9]+/);
+          if (matchedUrl) {//si déjà filtré par materiel occasion
+            let newHref = queryString.replace(matchedUrl[0], 'materiel_occasion=' + last_materiel_occ);
+            return location.href = newHref;
+          }
+          return location.href = window.location.href + '&materiel_occasion=' + last_materiel_occ;
+        }
+        
+      }else {//tout Domaines de matériels d'occasion
+        if (!brandValue) { 
+          let currentUrl = window.location.href;
+          let cleanUrl = currentUrl.replace(/[&?]marque_nom=[0-9]+/, '');
+          return location.href = cleanUrl
+        }else {
+          let currentUrl = window.location.href;
+          let cleanUrl = currentUrl.replace(/[&?]materiel_occasion=[0-9]+/, '');
+          return location.href = cleanUrl
+        }
+      }
+      
       if (brandValue) {
 
         $.ajax({
@@ -136,10 +165,16 @@
                 let matchedUrl = queryString.match(/marque_nom=[0-9]+/);
                 if (matchedUrl) {
                   let newHref = queryString.replace(matchedUrl[0], 'marque_nom=' + successResult['id']);
-                  location.href = newHref;
+                  return location.href = newHref;
+                  //si déjà filtré par marque neuf
+                  if (last_materiel_occ) {
+                    return location.href = newHref + '&materiel_occasion=' + last_materiel_occ;
+                  }
                 }
+                
               }else {
-                location.href = queryString + '&marque_nom=' + successResult['id'];
+                
+                return location.href = queryString + '&marque_nom=' + successResult['id'];
               }
             }
           }

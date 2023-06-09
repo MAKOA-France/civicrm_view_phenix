@@ -63,16 +63,17 @@ class GetDetailController
           $paramsToAppend = '?addressId=' . $address_id;
         }
 
-        if ($allInfoAboutCompany) {
+        $crypted_id = $custom_service->encryptString($id);
+        if ($allInfoAboutCompany) {//Todo hint
 
           $build .= '<div class="tooltip-map" id="' . $id . '-tooltip">
           <ul style="list-style-type: none;  ">
-          <li><a target="_blank" href="/annuaire/details/'.$id.'">' . $allInfoAboutCompany->organization_name . '</a></li>
+          <li><a target="_blank" href="/annuaire/details/'. $id . '?token=' . $crypted_id.'">' . $allInfoAboutCompany->organization_name . '</a></li> 
           <li>' . $allInfoAboutCompany->street_address . '</li>
           <li>'. $allInfoAboutCompany->postal_code . '  ' . $allInfoAboutCompany->city . '</li>
           <li>' . $allInfoAboutCompany->phone . '</li>
           <li>' . $dirigeant . '</li>
-          <li><a target="_blank" href="/annuaire/details/' . $id . $paramsToAppend .'"> > Voir la fiche</a></li>
+          <li><a target="_blank" href="/annuaire/details/' . $id . '?token=' . $crypted_id . $paramsToAppend .'"> > Voir la fiche</a></li> 
           </ul>
           </div>';
         }

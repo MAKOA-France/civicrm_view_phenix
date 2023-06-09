@@ -828,7 +828,6 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
      //Les agences liées à des cibles DLR membres actuels
      $all_agence_id_linked_whith_cible_dlr = $custom_service->geographiqueGetAllAgencesLinkedWithCibleDlr();
  
- 
      if ($all_agence_id_linked_whith_cible_dlr) {
          $all_agence_id_linked_whith_cible_dlr = array_unique(array_merge($all_agence_id_linked_whith_cible_dlr, $id_contact_cibles_already_filtered, $id_contact_cibles_membre_associe), SORT_REGULAR);
          $custom_service->addWhereQuery ($query, $all_agence_id_linked_whith_cible_dlr, 'civicrm_contact', 'id', 'IN');

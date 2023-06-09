@@ -457,7 +457,6 @@ public function getAdherentMembreStandardActuel () {
   ->addWhere('is_deleted', '=', FALSE)
   ->addWhere('membership.status_id', 'IN', [1, 3, 5, 2])
   ->addWhere('org_annuaireenligne.annuaireenligne_DLR', '=', 1)
-  ->addWhere('membership.owner_membership_id', 'IS EMPTY')
   ->execute()->getIterator();
   $cibles = iterator_to_array($cibles); 
   $cibles = array_column($cibles, 'id'); 

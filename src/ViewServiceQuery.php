@@ -39,17 +39,17 @@ class ViewServiceQuery {
    * @return void
    */
   public function getAllAgenceInfoByAdressId($addressId) {
-    $street_address_postal_code_city = \Civi\Api4\Address::get()
+    $street_address_postal_code_city = \Civi\Api4\Address::get(FALSE)
       ->addSelect('street_address', 'postal_code', 'city')
       ->addWhere('id', '=', $addressId)
       ->execute()->first();
 
-    $emails = \Civi\Api4\Email::get()
+    $emails = \Civi\Api4\Email::get(FALSE)
       ->addSelect('id', 'custom.*', '*')
       ->addWhere('contact_id', '=', $this->getContactIdByAdresseId($addressId))
       ->execute()->first()['email'];
 
-    $phones = \Civi\Api4\Phone::get()
+    $phones = \Civi\Api4\Phone::get(FALSE)
       ->addSelect('phone')
       ->addWhere('contact_id', '=', $this->getContactIdByAdresseId($addressId))
       ->execute()->first()['phone'];
@@ -128,19 +128,27 @@ class ViewServiceQuery {
    * @return void
    */
   public function getMaterielOccasion ($contactID) {
-    $db = \Drupal::database();
-    $string_query = 'select materiel_occasion from civicrm_value_phx_materiel where entity_id = ' . $contactID;
-    $materielOccasionId = $db->query($string_query)->fetch()->materiel_occasion;
-    $materielOccasionId = str_replace('x01', '', $materielOccasionId);
-    $new_query = "select name  from civicrm_option_value where option_group_id = 107 and  value = '" . $materielOccasionId . "'";
-    $allMaterielOcc = $db->query($new_query)->fetchAll();
-    if ($allMaterielOcc) {
-      $html = '<ul>';
-      foreach ($allMaterielOcc as $materiel) {
-        $html .= '<li>' . $materiel->name .  '</li>';
+
+    $materielOccasion = \Civi\Api4\Contact::get(FALSE)
+      ->addSelect('Materiel.nom_occasion:label')
+      ->addWhere('id', '=', $contactID)
+      ->addOrderBy('Materiel.nom_location:label', 'ASC')
+      ->execute()->getIterator();
+
+    $materielOccasion = iterator_to_array($materielOccasion);
+
+    if ($materielOccasion && isset($materielOccasion[0])) {
+      $materielOccasion = $materielOccasion[0];
+        
+      $allMaterielOcc = $materielOccasion['Materiel.nom_occasion:label'];
+      if ($allMaterielOcc) {
+          $html = '<ul>';
+          foreach ($allMaterielOcc as $materiel) {
+            $html .= '<li>' . $materiel .  '</li>';
+          }
+          $html .= '</ul>';
+          return $html;
       }
-      $html .= '</ul>';
-      return $html;
     }
   }
  /**
@@ -165,11 +173,13 @@ class ViewServiceQuery {
           break;
       }
 
-      $conditions[] = [
-        'field' => 'civicrm_value_phx_secteur.'.$column,
-        'value' => '1',
-        'operator' => '=',
-      ];
+      if($column) {
+        $conditions[] = [
+          'field' => 'civicrm_value_phx_secteur.'.$column,
+          'value' => '1',
+          'operator' => '=',
+        ];
+      }
     }
 
 

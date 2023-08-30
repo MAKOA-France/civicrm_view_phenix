@@ -4,6 +4,27 @@
   Drupal.behaviors.leaflet = {
     attach: function(context, settings) {
 
+      $(document).ready(function() {
+
+        jQuery('.publicite-header').on('load', () => {
+        }).on("error", function() {
+          $(this).hide();
+        });
+        
+        let btnr = '<input   type="submit" value="Rechercher" class=" filter-by-brand button btnrecherche js-form-submit form-submit">';
+        if (!$('.btnrecherche').length) {
+          jQuery('.page-annuaire-reparation .block-view-publicite header a').before(btnr);
+          jQuery('.page-annuaire-Label_SE .block-view-publicite header a').before(btnr);
+          jQuery('.page-annuaire-membres-associes .block-view-publicite header a').before(btnr);
+        }
+
+        //Ne pas afficher le bouton "voir la carte" s'il n'y a pas de résultat
+        if ($('.page-annuaire-table-liste-géographique #block-b-zf-content table tbody tr').length <1) {
+          $('.see-the-map').hide();
+        }
+      });
+
+
       var queryString = window.location.search;
 
       var latCenter = '';
@@ -198,6 +219,8 @@
 
     $(window).on('load',function() {
 
+      
+
       //jQuery('.filter_by_dprtmt').val(depId);
       let brandValue = $('.marque-nom-copy').val();
       $.ajax({
@@ -218,6 +241,9 @@
       });
     });
 
+    if (jQuery('.section-annuaire .messages.messages--error [role="alert"]').text().includes('Accès refusé. Vous devez vous authentifier pour visualiser cette ')) {
+      jQuery('.section-annuaire .messages.messages--error').hide();
+    }
 
     $('.toggle-sub-materiel').hide();
 

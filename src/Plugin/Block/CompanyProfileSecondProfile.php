@@ -22,6 +22,7 @@ class CompanyProfileSecondProfile  extends BlockBase  {
   public function build() {
     \Drupal::service('cache.render')->invalidateAll();
     $id = \Drupal::request()->get('arg_0');
+    $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
     $database = \Drupal::database();
 
     $description = $database->query('select org_dlr_descriptif_entreprise from civicrm_value_phx_org_dlr where entity_id = ' . $id)->fetchCol();
@@ -133,7 +134,12 @@ class CompanyProfileSecondProfile  extends BlockBase  {
       }
 
       $isMembreAssocie = $this->getQueryService()->isContactMemberAssocie ($id);
+      $pointsForts = '';
       if ($isMembreAssocie) {
+        if ($pointFortsVal = $custom_service->getMembreAssociePointForts($id)) {
+          $pointsForts .= '<p class="views-label  mb-0 point-forts   title-fiche"><b>Points forts : </b></p>';
+          $pointsForts .= '<div class=" second-column  content-fiche"> ' . $pointFortsVal . '</div>';
+        }
         $tagHtmlForLabelSE = '
         <span class="company-profile-membre-associe">Membre Associé</span>
         <img src="/files/styles/thumbnail/public/2022-07/logoMA.png?itok=vURbgtIU">
@@ -153,6 +159,8 @@ class CompanyProfileSecondProfile  extends BlockBase  {
       }
       $htmlDescription = strlen($description) > 5 ? ' <p class="views-label views-label-marque-nom title-fiche">Descriptif de l\'entreprise : </p>
         <div class="content-fiche company-description">' . $description . '</div><br>' : '<span class="noafff hide hidden">tssssa</span>';
+
+      $htmlDescription .= $pointsForts;  
 
       $materiel_occasion_html = $materiel_occasion_label ? ' <strong class="views-label views-label-marque-nom title-fiche">Matériels d\'occasion : </strong>
         <div class="content-fiche company-description">' . $materiel_occasion_label . '</div>' : '';

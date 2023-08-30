@@ -43,7 +43,9 @@
   background: #E20037;
   color: white;
 }
-
+p.custom-total {
+  font-size: inherit;
+}
 /* Mise en forme de la page POLICE */
 
 #views-exposed-form-location-occasion-membres-associes--liste-carte label, #views-exposed-form-location-occasion-membres-associes--page-2 label, #views-exposed-form-location-occasion-membres-associes--page-1 label,
@@ -66,6 +68,73 @@
   color: #707070;
 } */
 
+.company-profile-block .company-description strong {
+  font-weight: bold;
+}
+
+.section-annuaire header article .float-right .fa-magnifying-glass {
+  display: none;
+}
+
+tr.custom_field-row.custom_51_8562-row.symbiocrm-custom-field-row-51.symbiocrm-custom-field-row-RichTextEditor h2,
+tr.custom_field-row.custom_51_8562-row.symbiocrm-custom-field-row-51.symbiocrm-custom-field-row-RichTextEditor p,
+tr.custom_field-row.custom_51_8562-row.symbiocrm-custom-field-row-51.symbiocrm-custom-field-row-RichTextEditor h1 {
+  max-width: 522.172px;
+}
+
+.cyoutube-dlr {
+  padding-right: 38px;
+}
+
+.page-node-type-page #block-customsearchblock > svg {
+  margin-left: 127px !important;
+  display: inline-block;
+  padding-top: 12px;
+  color: black;
+  cursor: pointer;
+  z-index: 500;
+}
+
+.page-annuaire-membres-associes .block-asiderigthmembreassoc #item {
+  font-size: 13px;
+  font-weight: normal;
+  text-align: start;
+  color: #0a0a0a;
+}
+.section-annuaire .cyoutube-dlr  {
+ display: none
+}
+.legende-agence {
+  padding-left: 20px;
+  padding-right: 36px;
+}
+.legende-siege {
+  padding-right: 34px;
+}
+.page-annuaire-table-liste-géographique .custom-total {
+  padding-top: 20px;
+}
+.img-label-se.legende {
+  width: 71px;
+  height: 55px;
+}
+.labelize {
+  margin-left: -23px;
+}
+.img-membre-associe.legende {
+  margin-top: -5px;
+}
+
+.section-annuaire table.cols-6 tr {
+  border: 1px solid #e7d8d8;
+}
+.filter-by-brand {
+  margin-right: 6px !important;
+}
+.page-annuaire-membres-associes #sidebar {
+  background: #f6f6f6;
+  padding: 0.5rem 0.5rem;
+}
 .views-label-marque-nom.title-fiche {
   font-weight: bold;
 }
@@ -118,6 +187,12 @@ footer .basic__body.quickedit-field p {
 footer p {
   font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
 }
+
+.section-annuaire footer .menu li.menu-item a {
+  font-weight: 100 !important;
+  text-transform: initial;
+  color: #222222;
+}
 /* #block-b-zf-content > div > div > header{
   font-size: 14px;
 } */
@@ -130,3 +205,8 @@ a{
 .form-item-civicrm-1-contact-1-cg13-custom-35  {
   display: none !important;
 }
+
+.section-annuaire .messages.messages--error, .page-contact-vos-interlocuteurs.role--anonymous  .messages.messages--error  {
+  display: none;
+}
+

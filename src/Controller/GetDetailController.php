@@ -73,7 +73,6 @@ class GetDetailController
           <li>'. $allInfoAboutCompany->postal_code . '  ' . $allInfoAboutCompany->city . '</li>
           <li>' . $allInfoAboutCompany->phone . '</li>
           <li>' . $dirigeant . '</li>
-          <li><a target="_blank" href="/annuaire/details/' . $id . '?token=' . $crypted_id . $paramsToAppend .'"> > Voir la fiche</a></li> 
           </ul>
           </div>';
         }

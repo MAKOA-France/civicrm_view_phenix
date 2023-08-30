@@ -27,6 +27,27 @@ class ViewService {
     $this->currentUser = $currentUser;
   }
 
+  /**
+   * Recherche par nom officiel ou Nom de l'organisation
+   */
+  public function searchByOrganizationNameOrLegalName ($query, $table, $keyword) {
+    $query->where[] =  array(
+      'conditions' => array(
+        array(
+        'field' => $table. '.legal_name',
+        'value' => "%$keyword%",
+        'operator' => "LIKE",
+      ),
+      array(
+        'field' => $table. '.organization_name',
+        'value' => "%$keyword%",
+        'operator' => "LIKE",
+      ),
+    ),
+    'type' => 'OR',
+  );
+}
+
   public function numericFilter ($query, $generate_html) {
     $req = \Drupal::request();
     $current_uri = $req->getRequestUri();
@@ -373,7 +394,7 @@ class ViewService {
       -- AND A.city IS NOT NULL
         AND C.is_deleted = 0
       -- AND A.postal_code IS NOT NULL
-        AND A.geo_code_1 IS NOT NULL';
+        /* AND A.geo_code_1 IS NOT NULL */';
 
 
   if ($ids) {
@@ -491,13 +512,40 @@ public function getContactAlphabetique () {
   $contacts = \Civi\Api4\Contact::get(FALSE)
   ->addSelect('id')
   ->addJoin('Membership AS membership', 'LEFT')
-  ->addJoin('Address AS address', 'LEFT', ['address.is_primary', '=', 1])
-  ->addJoin('Phone AS phone', 'LEFT', ['phone.is_primary', '=', 1])
-  ->addWhere('membership.membership_type_id', '=', 1)
+  ->addJoin('Address AS address', 'LEFT', ['address_primary', '=', 1])
+  ->addJoin('Phone AS phone', 'LEFT', ['phone_primary', '=', 1])
+  ->addGroupBy('id')
   ->addWhere('contact_type', '=', 'Organization')
   ->addWhere('contact_sub_type', '=', 'Cible')
   ->addWhere('is_deleted', '=', FALSE)
-  ->addWhere('membership.status_id', 'IN', [1, 2, 3, 5])
+  ->addWhere('membership.status_id', 'IN', [2, 3, 1, 5])
+  ->addWhere('org_annuaireenligne.annuaireenligne_DLR', '=', 1)
+  ->addWhere('membership.membership_type_id', '=', 1)
+  ->execute()->getIterator();
+  $contacts = iterator_to_array($contacts);
+  if ($contacts) {
+    $idscontact = array_column($contacts, 'id');
+    return $idscontact;
+  }
+  return [];
+}
+
+
+/**
+ *  Tous les ids contact pour la page membre associé
+ */
+public function getContactMembreAssocie () {
+  $contacts = \Civi\Api4\Contact::get(FALSE)
+  ->addSelect('id')
+  ->addJoin('Membership AS membership', 'LEFT')
+  ->addJoin('Address AS address', 'LEFT', ['address.is_primary', '=', 1])
+  ->addJoin('Phone AS phone', 'LEFT', ['address.is_primary', '=', 1])
+  ->addGroupBy('id')
+  ->addWhere('membership.membership_type_id', 'IN', [2, 3, 4])
+  ->addWhere('contact_type', '=', 'Organization')
+  ->addWhere('contact_sub_type', '=', 'Cible')
+  ->addWhere('is_deleted', '=', FALSE)
+  ->addWhere('membership.status_id', 'IN', [2, 1, 3, 5])
   ->addWhere('org_annuaireenligne.annuaireenligne_DLR', '=', 1)
   ->execute()->getIterator();
   $contacts = iterator_to_array($contacts);
@@ -508,6 +556,46 @@ public function getContactAlphabetique () {
   return [];
 }
 
+
+/**
+ *  Tous les ids contact pour la page membre associé
+ */
+public function getContactVente () {
+  $contacts = \Civi\Api4\Contact::get(FALSE)
+  ->addSelect('id')
+  ->addJoin('Membership AS membership', 'LEFT')
+  ->addJoin('Address AS address', 'LEFT', ['address.is_primary', '=', 1])
+  ->addJoin('Phone AS phone', 'LEFT', ['address.is_primary', '=', 1])
+  ->addJoin('Custom_Secteurs AS custom_secteurs', 'LEFT')
+  ->addGroupBy('id')
+  ->addWhere('membership.membership_type_id', 'IN', [2, 3, 4, 1])
+  ->addWhere('contact_type', '=', 'Organization')
+  ->addWhere('contact_sub_type', '=', 'Cible')
+  ->addWhere('is_deleted', '=', FALSE)
+  ->addWhere('membership.status_id', 'IN', [2, 1, 3, 5])
+  ->addWhere('org_annuaireenligne.annuaireenligne_DLR', '=', 1)
+  ->addClause('OR', ['custom_secteurs.Secteur_occasion', '=', 1], ['custom_secteurs.Secteur_distributeur', '=', 1])
+  ->addOrderBy('organization_name', 'ASC')
+  ->execute()->getIterator();
+  $contacts = iterator_to_array($contacts);
+  if ($contacts) {
+    $idscontact = array_column($contacts, 'id');
+    return $idscontact;
+  }
+  return [];
+}
+
+/**
+ * Recupère le site web via id contact
+ */
+public function getWebsiteApiV4ById($contactId) {
+  
+  return $getWebsiteByQuery = \Civi\Api4\Website::get(FALSE)
+  ->addSelect('url')
+  ->addWhere('contact_id', '=', $contactId)
+  ->execute()->column('url')[0];
+
+}
 
 /**
  * Undocumented function
@@ -707,4 +795,30 @@ public function getContactAlphabetique () {
     return $value;
   }
 
+  /**
+   * 
+   */
+  public function getMembreAssociePointForts ($id) {
+    return \Civi\Api4\Contact::get(FALSE)
+      ->addSelect('org_dlr.points_forts')
+      ->addWhere('id', '=', $id)
+      ->execute()->first()['org_dlr.points_forts'];
+  }
+
+  
+  /**
+   * Récupère les contact ids qui sont "Location"
+   */
+  public function getContactLocation () {
+    return \Civi\Api4\Contact::get(FALSE)
+      ->addJoin('Membership AS membership', 'LEFT')
+      ->addWhere('membership.membership_type_id', 'IN', [1])
+      ->addWhere('contact_type', '=', 'Organization')
+      ->addWhere('contact_sub_type', '=', 'Cible')
+      ->addWhere('membership.status_id', 'IN', [1, 2, 3, 5])
+      ->addWhere('is_deleted', '=', FALSE)
+      ->addWhere('org_annuaireenligne.annuaireenligne_DLR', '=', 1)
+      ->addWhere('org_dlr.activiteprincipale', 'IN', [51, 74, 54])
+      ->execute()->column('id');
+  }
 }

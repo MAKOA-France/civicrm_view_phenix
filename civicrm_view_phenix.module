@@ -30,6 +30,23 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
       }
     }
   }
+  
+  
+  //Personnalisation de l'affichage de la publicité verticale (node publicité)
+  if ($view->storage->id() == 'publicite_node' &&  $view->current_display == 'block_1') {
+    if ($field->field == 'field_publicite') {
+      $current_output = $variables['output']->__toString();
+      
+      //Get random pub
+      $pub_img = $custom_query_service->getRandomPubVertical()['pub_img'];
+      $pub_url = $custom_query_service->getRandomPubVertical()['pub_url'];
+
+      $pub_link = $row->_entity->get('field_lien_de_la_pu')->getValue()[0]['uri'];
+      if ($pub_link) {
+        $variables['output'] = ['#markup' => '<a target="__blank" href="'  . $pub_url . '">' . $pub_img . '</a>'];
+      }
+    }
+  }
 
   //Label SE alter phone display
   $white_list_view_display = ['page_10_grue_tour' , 'page_11_labelse', 'page_7_reparation', 'page_1', 'page_2', 'liste_carte', 'page_5'];
@@ -1363,7 +1380,7 @@ function civicrm_view_phenix_preprocess_views_view(&$vars) {
   }
 
     //for the alphabetic menu
-    if ($view->storage->get('id') == 'publicite') {
+    if ($view->storage->get('id') == 'publicite_node') {
       $current_uri = \Drupal::request()->getRequestUri();
       $current_path = \Drupal::service('path.current')->getPath();
       $white_list_to_add_form_filter = ['/annuaire/geographique', '/annuaire/reparation', '/annuaire/alphabetique', '/annuaire/grues_a_tour', '/annuaire/membres-associes', '/annuaire/Label_SE'];
@@ -1785,5 +1802,16 @@ function civicrm_view_phenix_taxonomy_term_access(TermInterface $term, $operatio
   if ($account->isAnonymous()) {
     $response = new \Symfony\Component\HttpFoundation\RedirectResponse(Drupal\Core\Url::fromUri('internal:/')->toString());
     $response->send();
+  }
+}
+
+
+function civicrm_view_phenix_form_alter (&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  if ($form['#id'] == 'node-publicite-form' ) {
+    $form['field_domain_access']['widget']['#default_value'] = [
+      0 => "extranet_dlr_fr",
+      1 => "annuairedlr_fr",
+      2 => "www_annuairedlr_fr"
+    ];
   }
 }

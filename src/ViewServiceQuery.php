@@ -4,7 +4,8 @@
 namespace Drupal\civicrm_view_phenix;
 
 use Drupal\Core\Session\AccountInterface;
-
+use Drupal\node\Entity\Node;
+use Drupal\media\Entity\Media;
 /**
  * Class CustomService
  * @package Drupal\civicrm_view_phenix\Services
@@ -189,6 +190,84 @@ class ViewServiceQuery {
     ];
 
     return $query;
+  }
+
+  /**
+   * Recupère tous les node publicité publié, node correspondant à la page courante, ex si c'est la page vente (url : /annuaire/occasion) ça ajoute une condition de 
+   * requete  ==> field_menu like '%vente%', comme ci-dessous
+   */
+  public function getNodePublicite ($orientation) {
+    $currentPath = \Drupal::service('path.current')->getPath();
+    $nids = \Drupal::entityQuery('node')
+      ->condition('type', 'publicite')
+      ->condition('field_menu', '%' . $this->pageOccurenceToFieldMenu()[$currentPath] . '%', 'like')
+      ->condition('field_orientation', $orientation, '=')
+      ->condition('status', 1)
+      ->execute();
+
+    return $nids;
+  }
+
+  public function getRandomPubVertical () {
+    $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
+    $nidPublicite = $this->getNodePublicite('verticale');
+    if ($nidPublicite) {
+
+      $randomIndex = array_rand($nidPublicite, 1);
+      $node = Node::load($nidPublicite[$randomIndex]);
+      // $node = Node::load(self::NID_PUB_SIDEBAR_LEFT);
+      $getImg = $custom_service->getNodeFieldValue ($node, 'field_publicite');
+      
+      $publishOn = $custom_service->getNodeFieldValue ($node, 'publish_on');
+      $mediaImg = Media::load($getImg);
+      $fileId = $custom_service->getNodeFieldValue ($mediaImg, 'thumbnail');
+      $file = \Drupal\file\Entity\File::load($fileId);
+      $image_path = $custom_service->getNodeFieldValue ($file, 'uri');
+
+
+      $getLinkUrl = $custom_service->getNodeFieldValue ($node, 'field_lien_de_la_pu');
+      
+      // Create a URL object for the image.
+      $image_url = \Drupal\Core\Url::fromUri(file_create_url($image_path));
+
+      // Generate the renderable array for the image.
+      $image_render_array = [
+        '#theme' => 'image',
+        '#uri' => $image_url->toString(),
+        '#alt' => 'Alternative text for the image',
+      ];
+
+      // Get the Renderer service.
+      $renderer = \Drupal::service('renderer');
+
+      // Render the image using the Renderer service.
+      $image_output = $renderer->renderRoot($image_render_array);
+
+      // If you want to return the rendered image as HTML, you can do so:
+      $html = \Drupal\Core\Render\Markup::create($image_output);
+
+      return [
+        'pub_url' => $getLinkUrl,
+        'pub_img' => $html
+      ];
+
+
+    }
+
+    return false; // No pub
+  }
+
+  public function pageOccurenceToFieldMenu () {
+    return [
+      '/annuaire/alphabetique'              => "Alphabétique", 
+      '/annuaire/occasion'                  => "Vente", 
+      '/annuaire/location'                  => "Location", 
+      '/annuaire/reparation'                => "réparation", 
+      '/annuaire/Label_SE'                  =>  "Label SE+",
+      '/annuaire/membres-associes'          => "Membres Associés",
+      '/annuaire/table-liste-géographique'  => "Géographique",
+      '/annuaire/grues_a_tour'              => "Grues à Tour" 
+    ];
   }
 
 }

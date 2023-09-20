@@ -20,6 +20,17 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
   $row = $variables['row'];
   $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
   $custom_query_service = \Drupal::service('civicrm_view_phenix.view_query_services');
+
+  if ($view->storage->id() == 'publicite' &&  $view->current_display == 'publicite_guide_en_hauteur') {
+    if ($field->field == 'field_media_image') {
+      $current_output = $variables['output']->__toString();
+      $alt = $row->_entity->get('field_media_image')->getValue()[0]['alt'];
+      if ($alt) {
+        $variables['output'] = ['#markup' => '<a target="__blank" href="'  . $alt . '">' . $current_output . '</a>'];
+      }
+    }
+  }
+
   //Label SE alter phone display
   $white_list_view_display = ['page_10_grue_tour' , 'page_11_labelse', 'page_7_reparation', 'page_1', 'page_2', 'liste_carte', 'page_5'];
   if ($view->storage->id() == 'location_occasion_membres_associes_' &&  in_array($view->current_display,  $white_list_view_display)) {
@@ -1776,19 +1787,3 @@ function civicrm_view_phenix_taxonomy_term_access(TermInterface $term, $operatio
     $response->send();
   }
 }
-
-// mytheme.theme
-function civicrm_view_phenix_page_top(array &$page_top) {
-  $custom_html = '';
-  $page_top['#attached']['html_head'][] = [
-    [
-      '#type' => 'markup',
-      '#markup' => $custom_html,
-    ],
-    'my_custom_html',
-  ];
-
-  $var = '';
-}
- 
-

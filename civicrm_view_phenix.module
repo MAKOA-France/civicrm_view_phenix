@@ -42,9 +42,9 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
       $pub_url = $custom_query_service->getRandomPubVertical()['pub_url'];
 
       $pub_link = $row->_entity->get('field_lien_de_la_pu')->getValue()[0]['uri'];
-      if ($pub_link) {
+      // if ($pub_link) {
         $variables['output'] = ['#markup' => '<a target="__blank" href="'  . $pub_url . '">' . $pub_img . '</a>'];
-      }
+      // }
     }
   }
 
@@ -1809,8 +1809,6 @@ function civicrm_view_phenix_taxonomy_term_access(TermInterface $term, $operatio
 function civicrm_view_phenix_form_alter (&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
   if ($form['#id'] == 'node-publicite-form' ) {
     $form['field_domain_access']['widget']['#default_value'] = [
-      0 => "extranet_dlr_fr",
-      1 => "annuairedlr_fr",
       2 => "www_annuairedlr_fr"
     ];
   }

@@ -212,7 +212,6 @@ class ViewServiceQuery {
     $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
     $nidPublicite = $this->getNodePublicite('verticale');
     if ($nidPublicite) {
-
       $randomIndex = array_rand($nidPublicite, 1);
       $node = Node::load($nidPublicite[$randomIndex]);
       // $node = Node::load(self::NID_PUB_SIDEBAR_LEFT);
@@ -223,29 +222,31 @@ class ViewServiceQuery {
       $fileId = $custom_service->getNodeFieldValue ($mediaImg, 'thumbnail');
       $file = \Drupal\file\Entity\File::load($fileId);
       $image_path = $custom_service->getNodeFieldValue ($file, 'uri');
-
-
+      
+      
       $getLinkUrl = $custom_service->getNodeFieldValue ($node, 'field_lien_de_la_pu');
       
       // Create a URL object for the image.
       $image_url = \Drupal\Core\Url::fromUri(file_create_url($image_path));
-
+      
       // Generate the renderable array for the image.
       $image_render_array = [
         '#theme' => 'image',
         '#uri' => $image_url->toString(),
         '#alt' => 'Alternative text for the image',
       ];
-
+      
       // Get the Renderer service.
       $renderer = \Drupal::service('renderer');
-
+      
       // Render the image using the Renderer service.
       $image_output = $renderer->renderRoot($image_render_array);
-
+      // dump($image_path, $image_output);
+      
       // If you want to return the rendered image as HTML, you can do so:
       $html = \Drupal\Core\Render\Markup::create($image_output);
-
+      
+      // dump($html);
       return [
         'pub_url' => $getLinkUrl,
         'pub_img' => $html

@@ -219,8 +219,6 @@
 
     $(window).on('load',function() {
 
-      
-
       //jQuery('.filter_by_dprtmt').val(depId);
       let brandValue = $('.marque-nom-copy').val();
       $.ajax({

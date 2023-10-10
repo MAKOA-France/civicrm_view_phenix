@@ -192,8 +192,9 @@ class ViewService {
 
   public function getDirigeant ($company_id) {
     $database = \Drupal::database();
-    $query = $database->query('select * from civicrm_value_phx_Individual_contact_fonction where contact_fonction_entreprise = ' . $company_id);
+    $query = $database->query("select * from civicrm_value_phx_Individual_contact_fonction where contact_fonction_fonction = '1' and contact_fonction_entreprise = " . $company_id);
     $indiviualContactFonctions = $query->fetch();
+    // dump($indiviualContactFonctions, $company_id);
     if ($indiviualContactFonctions) {
 
       $dirigeant_id = $indiviualContactFonctions->entity_id;
@@ -204,9 +205,9 @@ class ViewService {
       ->execute()->first();
       */
 
-      $get_contacts_name = $database->query('select display_name from civicrm_contact where id = ' . $dirigeant_id);
+      $get_contacts_name = $database->query('select display_name from civicrm_contact  where is_deleted = 0 and id = ' . $dirigeant_id);
       $contacts_name = $get_contacts_name->fetch();
-
+// dump($contacts_name);
 
       if ($contacts_name) {
         return $contacts_name->display_name;

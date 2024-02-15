@@ -1807,6 +1807,9 @@ function civicrm_view_phenix_taxonomy_term_access(TermInterface $term, $operatio
 
 
 function civicrm_view_phenix_form_alter (&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  if ($form['#id'] == 'user-pass') {
+    $form['actions']['submit']['#value'] = t('Envoyer');
+  }
   if ($form['#id'] == 'node-publicite-form' ) {
     $form['field_domain_access']['widget']['#default_value'] = [
       2 => "www_annuairedlr_fr"

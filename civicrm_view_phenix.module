@@ -1813,3 +1813,19 @@ function civicrm_view_phenix_form_alter (&$form, \Drupal\Core\Form\FormStateInte
     ];
   }
 }
+
+
+
+use Drupal\Core\Block\BlockPluginInterface;
+/**
+ * 
+ * Implements hook_block_view_alter().
+ */
+function civicrm_view_phenix_block_view_alter(array &$build, BlockPluginInterface $block) {
+  // Check if the block is the one you want to modify.
+  if ($block->getPluginId() == 'block_content:a662a6e5-2282-4ab8-a6e7-325d8c06e702') {
+    // Get the current user object.
+    $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
+    $custom_service->generateUlrMarketPlace($build);
+  }
+}

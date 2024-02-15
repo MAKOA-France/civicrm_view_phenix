@@ -13,7 +13,9 @@
     text-transform: capitalize;
 }
  */
-
+.link-market-place {
+  display: none;
+}
 .company-profile-membre-associe {
   padding-left: 0 !important;
 }

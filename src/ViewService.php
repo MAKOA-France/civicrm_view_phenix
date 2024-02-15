@@ -4,6 +4,14 @@
 namespace Drupal\civicrm_view_phenix;
 
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Block\BlockPluginInterface;
+use Qantis\Tools\MkpUrlGenerator;
+use Qantis\Tools\UrlGenerator;
+use Drupal\Core\Http\Client;
+
+
+include __DIR__.'/vendor/autoload.php';
+
 
 /**
  * Class CustomService
@@ -16,6 +24,7 @@ class ViewService {
   const PAGE_GEOGRAPHIC_LIMIT = 900;
   const GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_ET_AGENCES = 195;
   const GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT = 142;
+  const QANTIS_KEY = '57dedf2c57a511ecb88e067e628b0734';
 
   const TITTLE_SITE = ' | Annuaire DLR distribution, location, réparation de matériels de chantier';
 
@@ -821,5 +830,28 @@ public function getWebsiteApiV4ById($contactId) {
       ->addWhere('org_annuaireenligne.annuaireenligne_DLR', '=', 1)
       ->addWhere('org_dlr.activiteprincipale', 'IN', [51, 74, 54])
       ->execute()->column('id');
+  }
+
+  /**
+   * Permet de generer un lien marketplace qui redirige l'user vers l'espace marketplace de qantis sans se connecter
+   * doc github : https://github.com/GroupeQantis/urlGenerator#marketplace-qantis
+   */
+  public function generateUlrMarketPlace (&$build) {
+    $user = \Drupal::currentUser();
+    $build['#cache']['max-age'] = 0;
+    // Get the email address of the current user.
+    $email = $user->getEmail();
+    if ($email) {
+      // $urlGeneratorPlateform = new UrlGenerator(self::QANTIS_KEY);
+      // $urlPlateform = $urlGeneratorPlateform($email);
+      //Générer un url 
+      $urlGeneratorMarket = new MkpUrlGenerator(self::QANTIS_KEY);
+      $urlMarket = $urlGeneratorMarket($email);
+
+      //TODO dans le futur  les appels devront être effectuer sur le nom de domaine https://achats.dlr.fr/$urlMarket
+      $build['#prefix'] = '<a id="link-market-place" class="link-market-place" target="__blank" href="https://marketplace.qantis.co' . $urlMarket . '">lien marketplace</a>';
+      // $build['#suffix'] = '<a href="https://qantis.co' . $urlPlateform . '">lien connexion</a>';
+    }
+    return $build;
   }
 }

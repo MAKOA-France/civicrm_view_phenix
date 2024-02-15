@@ -6,6 +6,11 @@
 
       $(document).ready(function() {
 
+        jQuery('.paragraph.paragraph--type--lien.paragraph--view-mode--default').first().on('click', function() {
+          let url = $('.link-market-place').attr('href');
+          window.open(url, '_blank');
+        })
+
         jQuery('.publicite-header').on('load', () => {
         }).on("error", function() {
           $(this).hide();

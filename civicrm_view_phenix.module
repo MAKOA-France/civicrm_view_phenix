@@ -1826,7 +1826,7 @@ use Drupal\Core\Block\BlockPluginInterface;
  */
 function civicrm_view_phenix_block_view_alter(array &$build, BlockPluginInterface $block) {
   // Check if the block is the one you want to modify.
-  if ($block->getPluginId() == 'block_content:a662a6e5-2282-4ab8-a6e7-325d8c06e702') {
+  if (in_array($block->getPluginId(), ['block_content:a662a6e5-2282-4ab8-a6e7-325d8c06e702', 'block_content:0095fb9a-22b7-4db9-af71-2cd9bca0885a'])) {
     // Get the current user object.
     $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
     $custom_service->generateUlrMarketPlace($build);

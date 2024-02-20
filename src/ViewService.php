@@ -839,7 +839,7 @@ public function getWebsiteApiV4ById($contactId) {
    */
   public function generateUlrMarketPlace (&$build) {
     $user = \Drupal::currentUser();
-    $build['#cache']['max-age'] = 0;
+    // $build['#cache']['max-age'] = 0;
     // Get the email address of the current user.
     $email = $user->getEmail();
     if ($email) {

@@ -856,6 +856,8 @@ public function getWebsiteApiV4ById($contactId) {
       if ($response) {
         $url = json_decode($response)->url;
         $build['#prefix'] = '<a id="link-market-place" class="link-market-place" target="__blank" href="' . $url . '">lien marketplace</a>';
+      }else {
+        $build['#prefix'] = '<a id="link-market-place" class="link-market-place" target="__blank" href="' . self::QANTIS_DOMAIN . '">lien marketplace</a>';
       }
     }
     return $build;

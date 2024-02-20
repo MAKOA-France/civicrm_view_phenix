@@ -847,10 +847,15 @@ public function getWebsiteApiV4ById($contactId) {
       //Générer un url 
       $urlGeneratorMarket = new MkpUrlGenerator(self::QANTIS_KEY);
       $urlMarket = $urlGeneratorMarket($email);
-
+      // Décoder les caractères spéciaux de l'URL
+      $urlMarket = urldecode($urlMarket);
       //TODO dans le futur  les appels devront être effectuer sur le nom de domaine https://achats.dlr.fr/$urlMarket
-      $build['#prefix'] = '<a id="link-market-place" class="link-market-place" target="__blank" href="https://achats.dlr.fr' . $urlMarket . '">lien marketplace</a>';
       // $build['#suffix'] = '<a href="https://qantis.co' . $urlPlateform . '">lien connexion</a>';
+      $response = file_get_contents('https://achats.dlr.fr' . $urlMarket);
+      if ($response) {
+        $url = json_decode($response)->url;
+        $build['#prefix'] = '<a id="link-market-place" class="link-market-place" target="__blank" href="' . $url . '">lien marketplace</a>';
+      }
     }
     return $build;
   }

@@ -25,6 +25,7 @@ class ViewService {
   const GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_ET_AGENCES = 195;
   const GROUP_ID_MEMBRE_ACTUEL_POUR_LES_CIBLES_SEULEMENT = 142;
   const QANTIS_KEY = '57dedf2c57a511ecb88e067e628b0734';
+  const QANTIS_DOMAIN = 'https://achats.dlr.fr';
 
   const TITTLE_SITE = ' | Annuaire DLR distribution, location, réparation de matériels de chantier';
 
@@ -851,7 +852,7 @@ public function getWebsiteApiV4ById($contactId) {
       $urlMarket = urldecode($urlMarket);
       //TODO dans le futur  les appels devront être effectuer sur le nom de domaine https://achats.dlr.fr/$urlMarket
       // $build['#suffix'] = '<a href="https://qantis.co' . $urlPlateform . '">lien connexion</a>';
-      $response = file_get_contents('https://achats.dlr.fr' . $urlMarket);
+      $response = file_get_contents(self::QANTIS_DOMAIN . $urlMarket);
       if ($response) {
         $url = json_decode($response)->url;
         $build['#prefix'] = '<a id="link-market-place" class="link-market-place" target="__blank" href="' . $url . '">lien marketplace</a>';

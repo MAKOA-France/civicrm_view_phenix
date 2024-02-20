@@ -849,7 +849,7 @@ public function getWebsiteApiV4ById($contactId) {
       $urlMarket = $urlGeneratorMarket($email);
 
       //TODO dans le futur  les appels devront être effectuer sur le nom de domaine https://achats.dlr.fr/$urlMarket
-      $build['#prefix'] = '<a id="link-market-place" class="link-market-place" target="__blank" href="https://marketplace.qantis.co' . $urlMarket . '">lien marketplace</a>';
+      $build['#prefix'] = '<a id="link-market-place" class="link-market-place" target="__blank" href="https://achats.dlr.fr' . $urlMarket . '">lien marketplace</a>';
       // $build['#suffix'] = '<a href="https://qantis.co' . $urlPlateform . '">lien connexion</a>';
     }
     return $build;

@@ -6,6 +6,10 @@
 
       $(document).ready(function() {
 
+        if (location.href.indexOf('annuaire') > 0) {
+          document.title = 'Annuaire DLR - matériels de chantier - distribution, location, réparation';
+        }
+
         jQuery('.paragraph.paragraph--type--lien.paragraph--view-mode--default').first().on('click', function() {
           let url = $('.link-market-place').attr('href');
           window.open(url, '_blank');

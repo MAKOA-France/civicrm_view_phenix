@@ -461,11 +461,46 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
     $view['#attributes']['class'][] = 'custom-view-embeded-map';
     $view['#attributes']['class'][] = $custom_class;
     $view_rendered = $hasLatitudeAndLongitude ? \Drupal::service('renderer')->render($view) : '';
+    $add_or_edit = $current_output ? 'Modifier la vidéo' : 'Ajouter une video';
+    $checksum = $custom_service->getChecksumById($curr_id);
+    // dump($current_output);
+
+    // si le output ne contient pas de balize <iframe on le recupere depuis la base peut etre
+
+    $btn_add_video = '<a href="/form/formulaire-pour-adherent?cid=' . $curr_id . '&cs=' . $checksum . '" class="button js-form-submit form-submit">' . $add_or_edit . '</a>';
+
+    //Recuperer le curr id
+    //recuperer le checksum
+    //former l'url d'ajout video
+    // Load the media entity using the URL.
+    if (strpos($current_output, '<iframe') === false) {
+      $entityTypeManager = \Drupal::service('entity_type.manager');
+      $query = 'select field_video_guide_target_id from civicrm_contact__field_video_guide where entity_id = '. $curr_id;
+      $mediaId = \Drupal::database()->query($query)->fetch()->field_video_guide_target_id;
+      if ($mediaId) {
+        
+        $media = $entityTypeManager->getStorage('media')->load($mediaId);
+        // Render the media entity.
+        $media_view_builder = $entityTypeManager->getViewBuilder('media');
+        $render_array = $media_view_builder->view($media);
+        $current_output = \Drupal::service('renderer')->render($render_array);
+      }
+    }
+
+
+    //seul les permanents, SU et Admin clients peuvent voir le bouton 
+    $current_user = \Drupal::currentUser();
+    $user_roles = $current_user->getRoles();
+    $bnt_add_video = '<div class="btn-add-video"> ' . $btn_add_video . ' </div>';
+    if ((!in_array('super_utilisateur', $user_roles) && !in_array('admin_client', $user_roles) && !in_array('permanent', $user_roles) && !in_array('administrator', $user_roles))) {
+      $bnt_add_video = '';
+    } 
+
     $markup = [
       '#type' => 'inline_template',
       '#template' => '{{ yourvar }} {{ yourhtml | raw }}',
       '#context' => [
-        'yourhtml' => '<div class="cvideo">' . $current_output  . '</div><div class="cmap">' .  $view_rendered . '</div>',
+        'yourhtml' => $bnt_add_video . '<div class="cvideo">' . $current_output  . '</div><div class="cmap">' .  $view_rendered . '</div>',
       ],
     ];
       $variables['output'] =$markup;
@@ -1319,6 +1354,8 @@ if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--list
   }
 
 }
+
+
 
 
 

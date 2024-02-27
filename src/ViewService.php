@@ -862,4 +862,15 @@ public function getWebsiteApiV4ById($contactId) {
     }
     return $build;
   }
+
+  /**
+   * Récupération du checksum
+   */
+  public function getChecksumById (int $contactId) : string  {
+    $checksums = \Civi\Api4\Contact::getChecksum(FALSE)
+      ->setContactId($contactId)
+      ->execute()->first()['checksum'];
+      
+    return $checksums;
+  }
 }

@@ -829,7 +829,7 @@ public function getWebsiteApiV4ById($contactId) {
       ->addWhere('membership.status_id', 'IN', [1, 2, 3, 5])
       ->addWhere('is_deleted', '=', FALSE)
       ->addWhere('org_annuaireenligne.annuaireenligne_DLR', '=', 1)
-      ->addWhere('org_dlr.activiteprincipale', 'IN', [51, 74, 54])
+      ->addWhere('org_dlr.activiteprincipale', 'IN', [51, 52, 74, 54])
       ->execute()->column('id');
   }
 

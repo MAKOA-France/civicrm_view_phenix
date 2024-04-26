@@ -463,7 +463,6 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
     $view_rendered = $hasLatitudeAndLongitude ? \Drupal::service('renderer')->render($view) : '';
     $add_or_edit = $current_output ? 'Modifier la vidéo' : 'Ajouter une video';
     $checksum = $custom_service->getChecksumById($curr_id);
-    // dump($current_output);
 
     // si le output ne contient pas de balize <iframe on le recupere depuis la base peut etre
 
@@ -473,19 +472,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
     //recuperer le checksum
     //former l'url d'ajout video
     // Load the media entity using the URL.
-    if (strpos($current_output, '<iframe') === false) {
-      $entityTypeManager = \Drupal::service('entity_type.manager');
-      $query = 'select field_video_guide_target_id from civicrm_contact__field_video_guide where entity_id = '. $curr_id;
-      $mediaId = \Drupal::database()->query($query)->fetch()->field_video_guide_target_id;
-      if ($mediaId) {
-        
-        $media = $entityTypeManager->getStorage('media')->load($mediaId);
-        // Render the media entity.
-        $media_view_builder = $entityTypeManager->getViewBuilder('media');
-        $render_array = $media_view_builder->view($media);
-        $current_output = \Drupal::service('renderer')->render($render_array);
-      }
-    }
+
 
 
     //seul les permanents, SU et Admin clients peuvent voir le bouton 

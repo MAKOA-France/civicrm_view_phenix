@@ -1756,7 +1756,6 @@ function civicrm_view_phenix_webform_element_alter(array &$element, \Drupal\Core
   }
 }
 
-
 /**
  * Implements hook_node_access().
  */
@@ -1770,11 +1769,19 @@ function civicrm_view_phenix_node_access(NodeInterface $node, $op, AccountInterf
   $currentUrl = \Drupal::request()->getRequestUri();
 
 
+
   //Rediriger la page d'accueil vers la page annuaire si c'est le domaine d'annuaire
-  if (($currentUrl == '/') && $domain == 'annuairedlr.fr') {
+  if ((strpos($currentUrl, '/user/login') !== false) && $domain == 'www.annuairedlr.fr') {
+    // // Redirect to a specific URL.
+    $response = new \Symfony\Component\HttpFoundation\RedirectResponse('https://www.annuairedlr.fr/annuaire');
+    return $response->send();
+  }
+
+  if (($currentUrl == '/') && ($domain == 'annuairedlr.fr' || $domain == 'www.annuairedlr.fr')) {
+    
     // Redirect to a specific URL.
     $response = new \Symfony\Component\HttpFoundation\RedirectResponse(Drupal\Core\Url::fromUri('internal:/annuaire')->toString());
-    $response->send();
+    return $response->send();
   }
 
   if ((strpos($currentUrl, '/annuaire') !== false) &&  ($domain == 'extranet.dlr.fr')) {
@@ -1784,12 +1791,12 @@ function civicrm_view_phenix_node_access(NodeInterface $node, $op, AccountInterf
 
   if ((strpos($currentUrl, '/') !== false) &&  $domain == 'www.guidedlr.fr') {
     $response = new \Symfony\Component\HttpFoundation\RedirectResponse('https://annuairedlr.fr/annuaire');
-    $response->send();
+    return $response->send();
   }
 
    if (($currentUrl == '/') &&  $domain == 'www.annuairedlr.fr') {
     $response = new \Symfony\Component\HttpFoundation\RedirectResponse('https://www.annuairedlr.fr/annuaire');
-    $response->send();
+    return $response->send();
   } 
 
 /*   if ((strpos($currentUrl, '/') !== false) &&  ($domain == 'www.annuairedlr.fr')) {

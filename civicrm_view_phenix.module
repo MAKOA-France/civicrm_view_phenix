@@ -158,7 +158,7 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
         //If legal_name is empty we get organization_name
         if (!$variables['output']) {
-          $organization_name_label = $custom_query_service->getContactOrganizationName($current_company_id)[0];
+          $organization_name_label = $custom_query_service->getContactOrganizationName($current_company_id);
           $current_value_name = '<a href="/annuaire/details/' . $current_company_id . '" class="compagny_name">' . $organization_name_label . '</a>';
         }
 

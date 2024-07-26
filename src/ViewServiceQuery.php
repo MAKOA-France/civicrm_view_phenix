@@ -118,7 +118,22 @@ class ViewServiceQuery {
 
   public function getContactOrganizationName ($contactId) {
     $db = \Drupal::database();
-    $name = $db->query('select organization_name from civicrm_contact where id = ' . $contactId)->fetchCol();
+    $name = $db->query('select organization_name from civicrm_contact where id = ' . $contactId)->fetchCol()[0];
+    if (!$name) {
+      \Drupal::service('civicrm')->initialize();
+      $contacts = \Civi\Api4\Contact::get(FALSE)
+      ->addSelect('display_name')
+      ->addWhere('id', '=', $contactId)
+      ->execute()->first();
+      $name = $contacts ? $contacts['display_name'] : false;
+      if (!$name) {
+        $contacts = \Civi\Api4\Contact::get(FALSE)
+        ->addSelect('organization_name')
+        ->addWhere('id', '=', $contactId)
+        ->execute()->first();
+        $name = $contacts ? $contacts['organization_name'] : false;
+      }
+    }
     return $name;
   }
 

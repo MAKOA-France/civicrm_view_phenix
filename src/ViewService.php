@@ -61,7 +61,7 @@ class ViewService {
   public function numericFilter ($query, $generate_html) {
     $req = \Drupal::request();
     $current_uri = $req->getRequestUri();
-      $number = '0-9';
+      $number = '009';
       //replace by
       $url = '';
       if ($query) {
@@ -81,13 +81,26 @@ class ViewService {
         $url = $current_uri . '?letter='. $number;
       }
 
+      //Le premier cas, c'est quand on arrive la premiere fois  :  ?letter=XX
+      //On reclique sur le meme lettre : ?letter=XX
+      //ON clique sur une autre lettre : ?lettre=YY
+      //filtre par "nom de l'entreprise" : ?name=XXX
+      //et Puis on clique sur une lettre : ?name=XXX&letter=XX
+
 
       //add a condition to allow the css to detect the active letter for the filter
       $get_number = $req->query->get('letter');
      // dump([($get_number == $number) => [$get_number, $number]]);
-      $is_active = (($get_number !== false) && ($get_number == '0-9')) ? 'active-letter' : ' ';
+      $is_active = (($get_number !== false) && ($get_number == '009')) ? 'active-letter' : ' ';
+
+
+      //TODO REMPLACER LE & (par ex && ou &&& ou plus) qui revient plusieurs fois dans l'url par un seul & : 
+      if (preg_match('/&{2,}/', $url)) {
+        $url = preg_replace('/&+/', '&', $url);
+      }
+
        $generate_html .= '<span>
-        <a data-active-letter="' .$is_active . '" data-current-uri="' . $current_uri . '" href="' . $url . '" class="filter-by-letter is-active">' . $number . '</a>
+        <a data-active-letter="' .$is_active . '" data-current-uri="' . $current_uri . '" href="' . $url . '" class="filter-by-letter is-active">0-9</a>
       </span>';
 
      return $generate_html;
@@ -115,6 +128,9 @@ class ViewService {
       //add a condition to allow the css to detect the active letter for the filter
       $get_letter = $req->query->get('letter');
       $is_active = ($get_letter && ($get_letter == $letter)) ? 'active-letter' : ' ';
+      if (preg_match('/&{2,}/', $url)) {
+        $url = preg_replace('/&+/', '&', $url);
+      }
        $generate_html .= '<span>
         <a data-active-letter="' .$is_active . '" data-current-uri="' . $current_uri . '" href="' . $url . '" class="filter-by-letter is-active">' . $letter . '</a>
       </span>';

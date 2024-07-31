@@ -994,7 +994,7 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
         $letter_alphabet = $request->query->get('letter');
 
         if ($letter_alphabet !== null) {
-          if ($letter_alphabet == "0-9") {
+          if ($letter_alphabet == "009") {
             foreach (range('A', 'Z') as $custom_letter) {
               $custom_service->addWhereQuery ($query,  $custom_letter . '%', 'civicrm_contact', 'organization_name', 'not like');
             }
@@ -1382,7 +1382,7 @@ function civicrm_view_phenix_preprocess_views_view(&$vars) {
   }
 
 
-  /* Ajouter filtre "TOUT" et chifre de 0-9   mettre aussi la total au dessus du filtre alphabetique */
+  /* Ajouter filtre "TOUT" et chiffre de 0 à 9   mettre aussi la total au dessus du filtre alphabetique */
 
   //check if there is a parameters
   $filterAllActive = '';

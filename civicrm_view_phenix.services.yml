@@ -1,7 +1,19 @@
 services:
+  civicrm_view_phenix.redirect_subscriber:
+    class: Drupal\civicrm_view_phenix\EventSubscriber\RedirectSubscriber
+    tags:
+      - { name: event_subscriber, priority: 2000  }
+
+  civicrm_view_phenix.redirect_malformed_url_middleware:
+    class: Drupal\civicrm_view_phenix\Middleware\RedirectMalformedUrlMiddleware
+    arguments: ['@http_kernel.basic']
+    tags:
+      - { name: http_middleware, priority: 200 }
+
   civicrm_view_phenix.view_services:
     class: Drupal\civicrm_view_phenix\ViewService
     arguments: ['@current_user']
 
   civicrm_view_phenix.view_query_services:
     class: Drupal\civicrm_view_phenix\ViewServiceQuery
+

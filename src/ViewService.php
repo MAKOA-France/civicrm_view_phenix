@@ -94,7 +94,7 @@ class ViewService {
       $is_active = (($get_number !== false) && ($get_number == '009')) ? 'active-letter' : ' ';
 
 
-      //TODO REMPLACER LE & (par ex && ou &&& ou plus) qui revient plusieurs fois dans l'url par un seul & : 
+      //TODO REMPLACER LE & (par ex && ou &&& ou plus) qui revient plusieurs fois dans l'url par un seul & :
       if (preg_match('/&{2,}/', $url)) {
         $url = preg_replace('/&+/', '&', $url);
       }
@@ -392,7 +392,7 @@ class ViewService {
 
 
   /**
-   * Recuperation des contacts agences liés avec des cibles dlr 
+   * Recuperation des contacts agences liés avec des cibles dlr
    */
   public function geographiqueGetAllAgencesLinkedWithCibleDlr () {
     //Recuperation des id contact qui sont membre dlr (membership_type_id = 1) et status_id (nouveau , courant, delai de grace, en instance)
@@ -437,9 +437,9 @@ class ViewService {
     return $contacts_cible_who_are_in_dynamic_group;
   }
 
-  
+
  /**
-   * 
+   *
    */
   public function encryptString($id) {
     $cipher = 'AES-256-CBC';
@@ -447,7 +447,7 @@ class ViewService {
       $encrypted = openssl_encrypt($id, $cipher, 'makoa_phenix', OPENSSL_RAW_DATA, $iv);
       return bin2hex($iv . $encrypted);
   }
-  
+
   /**
    * Redirect to the homepage
    */
@@ -455,9 +455,9 @@ class ViewService {
     $response = new \Symfony\Component\HttpFoundation\RedirectResponse(\Drupal\Core\Url::fromRoute('<front>')->toString());
     return $response->send();
   }
-  
+
   /**
-   * 
+   *
    */
   public function decryptString($encryptedId) {
     $cipher = 'AES-256-CBC';
@@ -465,16 +465,16 @@ class ViewService {
       $iv = substr($data, 0, openssl_cipher_iv_length($cipher));
       $encrypted = substr($data, openssl_cipher_iv_length($cipher));
       $decryptedId = openssl_decrypt($encrypted, $cipher, 'makoa_phenix', OPENSSL_RAW_DATA, $iv);
-  
+
     if (!is_numeric($decryptedId)) {
       // return $this->redirectHomePage();
     }
-  
+
     return $decryptedId;
   }
 
 /**
- * 
+ *
  */
 public function getNameEntrepriseById ($idContact) {
   $legalName = \Civi\Api4\Contact::get(FALSE)
@@ -506,9 +506,9 @@ public function getAdherentMembreStandardActuel () {
   ->addWhere('membership.status_id', 'IN', [1, 3, 5, 2])
   ->addWhere('org_annuaireenligne.annuaireenligne_DLR', '=', 1)
   ->execute()->getIterator();
-  $cibles = iterator_to_array($cibles); 
-  $cibles = array_column($cibles, 'id'); 
-  
+  $cibles = iterator_to_array($cibles);
+  $cibles = array_column($cibles, 'id');
+
   return $cibles;
 }
 
@@ -526,8 +526,8 @@ public function getContactCibleMembreAssocies () {
   ->addWhere('membership.status_id', 'IN', [1, 3, 5, 2])
   ->addWhere('org_annuaireenligne.annuaireenligne_DLR', '=', 1)
   ->execute()->getIterator();
-  $cibleAssocie = iterator_to_array($cibleAssocie); 
-  $cibleAssocie = array_column($cibleAssocie, 'id'); 
+  $cibleAssocie = iterator_to_array($cibleAssocie);
+  $cibleAssocie = array_column($cibleAssocie, 'id');
   return $cibleAssocie;
 }
 
@@ -616,7 +616,7 @@ public function getContactVente () {
  * Recupère le site web via id contact
  */
 public function getWebsiteApiV4ById($contactId) {
-  
+
   return $getWebsiteByQuery = \Civi\Api4\Website::get(FALSE)
   ->addSelect('url')
   ->addWhere('contact_id', '=', $contactId)
@@ -804,7 +804,7 @@ public function getWebsiteApiV4ById($contactId) {
     ];
   }
 
-  
+
   public function getNodeFieldValue ($node, $field) {
     $value = '';
     $getValue = $node->get($field)->getValue();
@@ -823,7 +823,7 @@ public function getWebsiteApiV4ById($contactId) {
   }
 
   /**
-   * 
+   *
    */
   public function getMembreAssociePointForts ($id) {
     return \Civi\Api4\Contact::get(FALSE)
@@ -832,7 +832,7 @@ public function getWebsiteApiV4ById($contactId) {
       ->execute()->first()['org_dlr.points_forts'];
   }
 
-  
+
   /**
    * Récupère les contact ids qui sont "Location"
    */
@@ -861,7 +861,7 @@ public function getWebsiteApiV4ById($contactId) {
     if ($email) {
       // $urlGeneratorPlateform = new UrlGenerator(self::QANTIS_KEY);
       // $urlPlateform = $urlGeneratorPlateform($email);
-      //Générer un url 
+      //Générer un url
       $urlGeneratorMarket = new MkpUrlGenerator(self::QANTIS_KEY);
       $urlMarket = $urlGeneratorMarket($email);
       // Décoder les caractères spéciaux de l'URL
@@ -886,7 +886,7 @@ public function getWebsiteApiV4ById($contactId) {
     $checksums = \Civi\Api4\Contact::getChecksum(FALSE)
       ->setContactId($contactId)
       ->execute()->first()['checksum'];
-      
+
     return $checksums;
   }
 }

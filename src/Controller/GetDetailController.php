@@ -68,7 +68,7 @@ class GetDetailController
 
           $build .= '<div class="tooltip-map" id="' . $id . '-tooltip">
           <ul style="list-style-type: none;  ">
-          <li><a target="_blank" href="/annuaire/details/'. $id . '?token=' . $crypted_id.'">' . $allInfoAboutCompany->organization_name . '</a></li> 
+          <li><a target="_blank" href="/annuaire/details/'. $id . '?token=' . $crypted_id.'">' . $allInfoAboutCompany->organization_name . '</a></li>
           <li>' . $allInfoAboutCompany->street_address . '</li>
           <li>'. $allInfoAboutCompany->postal_code . '  ' . $allInfoAboutCompany->city . '</li>
           <li>' . $allInfoAboutCompany->phone . '</li>
@@ -144,6 +144,8 @@ class GetDetailController
           $result = $query->fetch();
           if($result) {
               $label = $result->label;
+              // TODO Sitraka ce serait pas ici qu'on ajoute au label des parametres de façon récursive et que ca poserait probleme ???
+              //exemple : /annuaire/location?-9materiel_location_new=8-9materiel_location_new%3D2-9=materiel_location_new=11&-9&&&&letter=U
               return new Response($label);
           }
 

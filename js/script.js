@@ -257,7 +257,7 @@
     //todo location here
     var getLocation = 'materiel_location_new';
     if(queryString.indexOf(getLocation) > 0) {
-      let matchedFilterLocation = queryString.match(/materiel_location_new=[009]+/g);
+      let matchedFilterLocation = queryString.match(/materiel_location_new=[0-9]+/g);
       if(matchedFilterLocation) {
         let locationId = matchedFilterLocation[0].split('materiel_location_new=')[1];
         jQuery('[name="materiel_location_new['+locationId+']"]').next('ul').show();

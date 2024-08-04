@@ -450,6 +450,7 @@ class ViewService {
 
   /**
    * Redirect to the homepage
+   * TODO SITRAKA : dans quels cas est-ce utilisé ? <front> marche pour extranet.dlr.fr/bienvenue ? pour www.annuairedlr.fr/annuaire ?
    */
   public function redirectHomePage () {
     $response = new \Symfony\Component\HttpFoundation\RedirectResponse(\Drupal\Core\Url::fromRoute('<front>')->toString());

@@ -1702,8 +1702,11 @@ function civicrm_view_phenix_node_access(NodeInterface $node, $op, AccountInterf
   $domain = \Drupal::request()->getHost();
 
   // les rubriques de l'annuaire DLR qui doivent etre accessibles aux visiteurs anonymes ?
+  //Parmis les node de type "page de base" il y a ce qui sont privé et public, donc pour ces nodes là sont publics 
   // Add the node IDs here.
   // TODO 3/8/24 : Sitraka POURQUOI CES NODES ET PAS D'AUTRES ? SONT ILS CEUX DE LA PROD OU CEUX DU DEV ? MERCI D'EXPLIQUER !
+  //todo lister les nodes avec leur nom ou title 
+  //par exemple le node/611 = /annuaire (la homepage)
   $allowed_node_ids = [611, 607, 131, 409, 407, 408];
 
   if ($account->isAnonymous()) {

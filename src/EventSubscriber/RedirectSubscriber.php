@@ -70,9 +70,10 @@ class RedirectSubscriber implements EventSubscriberInterface {
                 $response = new RedirectResponse($new_url, 301);
                 $event->setResponse($response);
               }
-          } // redirect extranet.dlr.fr/ vers /bienvenue
+          } // redirect extranet.dlr.fr/ vers /  
+          //TODO
             if ($current_uri === '/' && $current_domain === 'extranet.dlr.fr' ) {
-            $event->setResponse(new RedirectResponse('/user/login?destination=/bienvenue'));
+            $event->setResponse(new RedirectResponse('/user/login'));
           } // redirect annuairedlr.fr/ ET TOUTE URL qui ne contient pas /annuaire vers /annuaire
           elseif (strpos($current_uri, '/annuaire') !== 0 && $current_domain === 'annuairedlr.fr' ) {
             $event->setResponse(new TrustedRedirectResponse('https://www.annuairedlr.fr/annuaire', 301));

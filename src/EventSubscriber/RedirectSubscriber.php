@@ -8,47 +8,26 @@ use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
+use Drupal\Core\Cache\CacheableRedirectResponse;
 
 
 class RedirectSubscriber implements EventSubscriberInterface {
 
-/*   protected $configFactory;
-  protected $currentPath;
-
-  public function __construct(ConfigFactoryInterface $config_factory, CurrentPathStack $current_path) {
-    $this->configFactory = $config_factory;
-    $this->currentPath = $current_path;
-  }
- */
   public function checkForRedirection(RequestEvent $event) {
     $request = $event->getRequest();
     $current_uri = $request->getRequestUri();
     $current_domain = $request->getHost();
  //   $frontPage = $this->configFactory->get('system.site')->get('page.front');
-    $userAgent = $request->headers->get('User-Agent');
 
-    if (strpos($userAgent, 'facebookexternalhit') !== false) {
+/* // cette fonction sert à renvoyer une erreur aux bots qui font trop de requetes sur le site (ici amazonbot)
+   $userAgent = $request->headers->get('User-Agent');
+
+     if (strpos($userAgent, 'amazonbot') !== false) {
       if (strpos($request->getPathInfo(), '/annuaire') === 0) {
         $event->setResponse(new Response('Access Denied', Response::HTTP_FORBIDDEN));
         return;
       }
-    }
-
-/* // Vérifiez si c'est la page d'accueil ou la page configurée comme page d'accueil
-    if ($currentPath === '/' || $currentPath === $frontPage) {
-      switch ($currentDomain) {
-        case 'extranet.dlr.fr':
-          if ($currentPath !== '/bienvenue') {
-            $event->setResponse(new RedirectResponse('/bienvenue', 301));
-          }
-          break;
-        case 'annuairedlr.fr':
-        case 'www.annuairedlr.fr':
-          $event->setResponse(new RedirectResponse('https://www.annuairedlr.fr/annuaire', 301));
-          break;
-      }
-    }
- */
+    } */
 
    switch ($current_domain) {
 
@@ -70,12 +49,8 @@ class RedirectSubscriber implements EventSubscriberInterface {
                 $response = new RedirectResponse($new_url, 301);
                 $event->setResponse($response);
               }
-          } // redirect extranet.dlr.fr/ vers /  
-          //TODO
-            if ($current_uri === '/' && $current_domain === 'extranet.dlr.fr' ) {
-            $event->setResponse(new RedirectResponse('/user/login'));
-          } // redirect annuairedlr.fr/ ET TOUTE URL qui ne contient pas /annuaire vers /annuaire
-          elseif (strpos($current_uri, '/annuaire') !== 0 && $current_domain === 'annuairedlr.fr' ) {
+          }
+          elseif(strpos($current_uri, '/annuaire') !== 0 && $current_domain === 'annuairedlr.fr' ) {
             $event->setResponse(new TrustedRedirectResponse('https://www.annuairedlr.fr/annuaire', 301));
           }
        break;

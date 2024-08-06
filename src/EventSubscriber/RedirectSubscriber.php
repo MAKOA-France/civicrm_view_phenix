@@ -39,8 +39,8 @@ class RedirectSubscriber implements EventSubscriberInterface {
           }
         break;
 
-      case 'annuairedlr.fr':
-      case 'extranet.dlr.fr':
+       case 'annuairedlr.fr':
+       case 'extranet.dlr.fr':
           if (strpos($current_uri, '/annuaire') === 0) {
               // Redirect extranet.dlr.fr/annuaire/* ou annuairedlr.fr/annuaire/* URLs to www.annuairedlr.fr/annuaire/*
               $new_url = 'https://www.annuairedlr.fr' . $current_uri;
@@ -49,7 +49,7 @@ class RedirectSubscriber implements EventSubscriberInterface {
                 $response = new RedirectResponse($new_url, 301);
                 $event->setResponse($response);
               }
-          }
+          } // TODO (avec prudence) désactiver r4032login et rediriger extranet.dlr.fr sur /user/login (voir un commit précédent) - et laisser login_destinations sur <front> pour rediriger sur la page d'accueil apres login car en code ca ne marchait pas (ou débuguer
           elseif(strpos($current_uri, '/annuaire') !== 0 && $current_domain === 'annuairedlr.fr' ) {
             $event->setResponse(new TrustedRedirectResponse('https://www.annuairedlr.fr/annuaire', 301));
           }

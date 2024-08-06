@@ -19,7 +19,7 @@
         }).on("error", function() {
           $(this).hide();
         });
-        
+
         let btnr = '<input   type="submit" value="Rechercher" class=" filter-by-brand button btnrecherche js-form-submit form-submit">';
         if (!$('.btnrecherche').length) {
           jQuery('.page-annuaire-reparation .block-view-publicite header a').before(btnr);
@@ -49,7 +49,7 @@
     $('.ul-child-materiel-location.form-select').attr('size', '10');
     $('.ul-child-materiel-location.form-select').css('height', '100%');
 
-    jQuery('p.content-fiche').each(function(el,id) 
+    jQuery('p.content-fiche').each(function(el,id)
     {
         if (jQuery(id).text().includes('Fournisseur DLR')) {
           jQuery(id).hide();
@@ -166,9 +166,9 @@
           }
           return location.href = window.location.href + '&materiel_occasion=' + last_materiel_occ;
         }
-        
+
       }else {//tout Domaines de matériels d'occasion
-        if (!brandValue) { 
+        if (!brandValue) {
           let currentUrl = window.location.href;
           let cleanUrl = currentUrl.replace(/[&?]marque_nom=[0-9]+/, '');
           return location.href = cleanUrl
@@ -178,9 +178,9 @@
           return location.href = cleanUrl
         }
       }
-      
-      if (brandValue) {
 
+      if (brandValue) {
+     if (window.location.href.indexOf("/annuaire/occasion") > -1) {
         $.ajax({
           url: '/annuaire/occasion/setdefaultvalue',
           type: "get",
@@ -201,9 +201,9 @@
                     return location.href = newHref + '&materiel_occasion=' + last_materiel_occ;
                   }
                 }
-                
+
               }else {
-                
+
                 return location.href = queryString + '&marque_nom=' + successResult['id'];
               }
             }
@@ -214,6 +214,7 @@
           console.log(error, 'ERROR')
         }
       });
+    }
     }
     });
 

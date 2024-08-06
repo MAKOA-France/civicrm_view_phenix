@@ -229,23 +229,26 @@
     $(window).once('leaflet').on('load',function() {
 
       //jQuery('.filter_by_dprtmt').val(depId);
-      let brandValue = $('.marque-nom-copy').val();
-      $.ajax({
-        url: '/annuaire/occasion/setdefaultvalue',
-        type: "get",
-        data: {get_id: jQuery('[name="marque_nom"]').val()},
-        success: (successResult, val, ee) => {
-          if (successResult > 1) {
-            $('.marque-nom-copy').val('');
-          }else {
-            $('.marque-nom-copy').val(successResult);
-          }
 
-        },
-        error: function(error) {
-          console.log(error, 'ERROR')
-        }
-      });
+      let brandValue = $('.marque-nom-copy').val();
+      if (window.location.href.indexOf("/annuaire/occasion") > -1) {
+        $.ajax({
+          url: '/annuaire/occasion/setdefaultvalue',
+          type: "get",
+          data: {get_id: jQuery('[name="marque_nom"]').val()},
+          success: (successResult, val, ee) => {
+            if (successResult > 1) {
+              $('.marque-nom-copy').val('');
+            }else {
+              $('.marque-nom-copy').val(successResult);
+            }
+
+          },
+          error: function(error) {
+            console.log(error, 'ERROR')
+          }
+        });
+      }
     });
 
     if (jQuery('.section-annuaire .messages.messages--error [role="alert"]').text().includes('Accès refusé. Vous devez vous authentifier pour visualiser cette ')) {

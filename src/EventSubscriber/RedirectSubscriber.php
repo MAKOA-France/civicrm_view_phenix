@@ -4,6 +4,7 @@ namespace Drupal\civicrm_view_phenix\EventSubscriber;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Routing\TrustedRedirectResponse;
@@ -39,19 +40,12 @@ class RedirectSubscriber implements EventSubscriberInterface {
           }
         break;
 
-       case 'annuairedlr.fr':
+        case 'annuairedlr.fr':
+                $event->setResponse(new Response('', 410));
+                       break;
        case 'extranet.dlr.fr':
           if (strpos($current_uri, '/annuaire') === 0) {
-              // Redirect extranet.dlr.fr/annuaire/* ou annuairedlr.fr/annuaire/* URLs to www.annuairedlr.fr/annuaire/*
-              $new_url = 'https://www.annuairedlr.fr' . $current_uri;
-              // redirige seulement si la nouvelle URL est différente de l'URL actuelle
-              if ($new_url !== $request->getUri()) {
-                $response = new RedirectResponse($new_url, 301);
-                $event->setResponse($response);
-              }
-          } // TODO (avec prudence) désactiver r4032login et rediriger extranet.dlr.fr sur /user/login (voir un commit précédent) - et laisser login_destinations sur <front> pour rediriger sur la page d'accueil apres login car en code ca ne marchait pas (ou débuguer
-          elseif(strpos($current_uri, '/annuaire') !== 0 && $current_domain === 'annuairedlr.fr' ) {
-            $event->setResponse(new TrustedRedirectResponse('https://www.annuairedlr.fr/annuaire', 301));
+                $event->setResponse(new Response('', 410));
           }
        break;
       }

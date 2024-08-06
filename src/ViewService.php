@@ -449,13 +449,22 @@ class ViewService {
   }
 
   /**
-   * Redirect to the homepage
+   * Redirect to the homepage (utilisé pour les pages de l'ANNUAIRE DLR)
    * TODO SITRAKA : dans quels cas est-ce utilisé ? <front> marche pour extranet.dlr.fr/bienvenue ? pour www.annuairedlr.fr/annuaire ?
    */
-  public function redirectHomePage () {
+public function redirectHomePage() {
+  // Récupérer l'URL courante
+  $current_url = \Drupal::request()->getRequestUri();
+
+  // Récupérer le domaine courant
+  $current_domain = \Drupal::request()->getHost();
+
+  // Vérifier si l'URL contient '/annuaire' et si le domaine est 'www.annuairedlr.fr'
+  if (strpos($current_url, '/annuaire') !== false && $current_domain == 'www.annuairedlr.fr') {
     $response = new \Symfony\Component\HttpFoundation\RedirectResponse(\Drupal\Core\Url::fromRoute('<front>')->toString());
     return $response->send();
   }
+}
 
   /**
    *

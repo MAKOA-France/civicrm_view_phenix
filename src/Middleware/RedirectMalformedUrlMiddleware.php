@@ -18,6 +18,7 @@ class RedirectMalformedUrlMiddleware implements HttpKernelInterface {
   public function handle(Request $request, $type = self::MAIN_REQUEST, $catch = TRUE) {
 
     $query_string = $request->getQueryString();
+    $current_uri = $request->getRequestUri(); //Modif de sitraka ---- 
 
     // Vérifier si l'URL contient des paramètres malformés
     if ($query_string && (
@@ -28,8 +29,12 @@ class RedirectMalformedUrlMiddleware implements HttpKernelInterface {
     )) {      // Rediriger vers la page d'accueil
       //return new RedirectResponse('/annuaire', 301);
 
-      // retourner une erreur 410 Anciennes URLs obsolètes pour indiquer aux bots de désindexer rapidement ces pages
-      return new Response('', 410);
+      
+      if (strpos($current_uri, '/annuaire') !== false) {  //Modif de sitraka ---- Si c'est la page annuaire
+
+        // retourner une erreur 410 Anciennes URLs obsolètes pour indiquer aux bots de désindexer rapidement ces pages
+        return new Response('', 410);
+      }
     }
 
     return $this->httpKernel->handle($request, $type, $catch);

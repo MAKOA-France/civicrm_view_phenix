@@ -450,7 +450,7 @@ class ViewService {
 
   /**
    * Redirect to the homepage (utilisé pour les pages de l'ANNUAIRE DLR)
-   * TODO SITRAKA : dans quels cas est-ce utilisé ? <front> marche pour extranet.dlr.fr/bienvenue ? pour www.annuairedlr.fr/annuaire ?
+   * TODO SITRAKA : dans quels cas est-ce utilisé ? faire attention à limiter au contexte utile annuaire extranet civicrm admin ? <front> marche pour extranet.dlr.fr/bienvenue ? pour www.annuairedlr.fr/annuaire ?
    */
 public function redirectHomePage() {
   // Récupérer l'URL courante

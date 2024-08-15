@@ -30,7 +30,10 @@ class RedirectSubscriber implements EventSubscriberInterface {
       }
     } */
 
-   switch ($current_domain) {
+/* //  Usha 15/05/24 code qui fonctionnait mais commenté car remplacé par module Redirect et Domain redirect
+// a noter annuairedlr.fr est redirigé au niveau de gandi (et non par le code) sur www.annuairedlr.fr
+
+switch ($current_domain) {
 
       case 'www.annuairedlr.fr':
        // Redirect www.annuairedlr.fr et TOUTE URL qui ne contient pas /annuaire to www.annuairedlr.fr/annuaire
@@ -48,7 +51,7 @@ class RedirectSubscriber implements EventSubscriberInterface {
                 $event->setResponse(new Response('', 410));
           }
        break;
-      }
+      } */
     }
 
   public static function getSubscribedEvents() {

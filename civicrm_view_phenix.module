@@ -79,9 +79,10 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
       $get_contact_type =  \Drupal::service('civicrm_view_phenix.view_services')->getContactTypeById ($current_company_id);
       $font_awesome_html = '';
 
-      $agence_icon = '<i class=\'far fa-building pr-12 \'></i>';
 
-      $cible_icon = '<i class=\'fas fa-city pr-8 \'></i>';
+      $agence_icon = '<i class=\'far fa-building ssssh pr-12 \'></i>';
+
+      $cible_icon = '<i class=\'fas fa-city ' . $current_company_id . '  pr-8 \'></i>';
 
       $get_contact_type = $get_contact_type[0];
       $get_contact_type = str_replace("\x01", "", $get_contact_type);
@@ -92,7 +93,23 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
       }
 
       $value = $field->getValue($row);
+
+      
       $current_value_name = is_string($variables['output']) ? $variables['output'] :  $variables['output']->__toString();
+      
+        // Check if the client's IP address matches your IP address
+
+      if (!$current_value_name) {
+        $contacts = \Civi\Api4\Contact::get(FALSE)
+          ->addSelect('display_name', 'organization_name')
+          ->addWhere('id', '=', $current_company_id)
+          ->execute()->first();
+          
+        if ($contacts) {
+          $name = $contacts['display_name'] ? $contacts['display_name'] : $contacts['organization_name'];
+            $current_value_name = '<a href="/annuaire/details" class="compagny_name">' . $name . '</a>';
+        }
+      }
 
       //Override link
       if (!empty($get_contact_type)) {
@@ -101,7 +118,21 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
 
         $isAgence = $get_contact_type == 'Agence';
         $value = $field->getValue($row);
+        
+  
         $current_value_name = is_string($variables['output']) ? $variables['output'] :  $variables['output']->__toString();
+
+        if (!$current_value_name) {
+          $contacts = \Civi\Api4\Contact::get(FALSE)
+            ->addSelect('display_name', 'organization_name')
+            ->addWhere('id', '=', $current_company_id)
+            ->execute()->first();
+          
+          if ($contacts) {
+            $name = $contacts['display_name'] ? $contacts['display_name'] : $contacts['organization_name'];
+            $current_value_name = '<a href="/annuaire/details" class="compagny_name">' . $name . '</a>';
+          }
+        }
 
       }
 
@@ -116,6 +147,9 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
         $encryptedID = $custom_service->encryptString($current_company_id);
         $current_value_name = str_replace($current_company_id, $idCibleLinkedWithThisAgence[0] . $current_company_id . '?addressId=' . $addresseId. '&token=' . $encryptedID, $current_value_name);
       }
+
+
+     
       $variables['output'] = ['#markup' => '<span class="content-fiche">  ' . $font_awesome_html . $current_value_name . ' &nbsp;'];
     }
   }

@@ -696,7 +696,7 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
 
 
     //Filtrer par agence
-    // $custom_service->addWhereQuery ($query, 'Cible', 'civicrm_contact_civicrm_address', 'contact_sub_type', '=');//TODO FILTER
+    // $custom_service->addWhereQuery ($query, 'Cible', 'civicrm_contact_civicrm_address', 'contact_sub_type', '=');
      //$custom_service->addWhereQuery ($query, 'DLR (Membre actuel)', 'civicrm_tag_civicrm_entity_tag', 'name', '=');
 
     //if there is filter
@@ -1009,7 +1009,6 @@ function civicrm_view_phenix_preprocess_page(&$variables)
 }
 
 function civicrm_view_phenix_preprocess_html(&$variables) {
-  //Todo set title
   $req = \Drupal::request();
   $current_path = \Drupal::service('path.current')->getPath();
 
@@ -1495,7 +1494,6 @@ function civicrm_view_phenix_views_pre_view(Drupal\views\ViewExecutable $view, $
   $custom_service = \Drupal::service('civicrm_view_phenix.view_services');
   $db = \Drupal::database();
   //On n'affiche pas la page si ce n'est pas un adhérent
-  //TODO SITRAKA : PAS CLAIR "si ce n'est pas un adhérent" ??? a quel objet s'applique isAnnuaire ? au User drupal ? à l'entreprise qui s'affiche ? à quoi ?
   if (($view->id() == 'fiche') && ($display_id == 'page_2')) {
 
     $contact_id = \Drupal::request()->attributes->get('arg_0');
@@ -1570,45 +1568,7 @@ function build_ul_to_append_in_filter_toggle($ul_child, $id, $whiteslist, &$allU
   return $allUl;
 }
 
-/* function civicrm_view_phenix_form_alter (&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
-    //TODO Sitraka pourquoi on garde ce code commenté ? a quoi a t'il servi ? est il ailleurs maintenant ? peut on supprimer ?
-    //content type publicite
-  if (in_array($form['#id'], ['node-publicite-form', 'node-publicite-edit-form'])) {
 
-    $menu_tree_service = \Drupal::service('menu.link_tree');
-
-    $menu_parameters = new \Drupal\Core\Menu\MenuTreeParameters();
-    $menu_parameters->setMaxDepth(1); // Profondeur du menu à afficher
-    $menu_name = 'guide'; // Nom machine du menu à afficher
-
-    $menuLoaded = $menu_tree_service->load($menu_name, $menu_parameters);
-
-
-    //filter By enabled
-    foreach($menuLoaded as $key => $eachMenu) {
-      if (!$eachMenu->link->isEnabled()) {
-        unset($menuLoaded[$key]);
-      }
-    }
-
-    $option = [];
-    foreach ($menuLoaded as $key => $menu) {
-      $option[$key] = $menu->link->getTitle();
-    }
-
-    $form['all_menu'] = [
-     '#type' => 'checkboxes',
-     '#options' => $option,
-     '#title' => 'Menu annuaire',
-     '#weight' => 10,
-     '#attributes' => ['class' => ['all-menu-checkboxes']]
-   ];
-
-    $form['field_menu']['#attributes']['class'][] = 'hide hidden';
-
-  }
-
-} */
 
 
  function civicrm_view_phenix_query_alter( &$query) {
@@ -1704,7 +1664,10 @@ function civicrm_view_phenix_taxonomy_term_access(TermInterface $term, $operatio
   return AccessResult::neutral();
 }
 
-// TODO 3/8/24 : Sitraka : ca sert à quoi ????
+
+/**
+ * Implements hook_form_alter().
+ */
 function civicrm_view_phenix_form_alter (&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
   if ($form['#id'] == 'user-pass') {
     $form['actions']['submit']['#value'] = t('Envoyer');

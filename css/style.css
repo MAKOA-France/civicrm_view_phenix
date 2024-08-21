@@ -17,14 +17,16 @@
 
  /*****Asset injector*****/
 
- .svg-inline--fa.fa-link.icon-link {
+ .section-annuaire .svg-inline--fa.fa-link.icon-link {
   display: none !important;
 }
 
 .section-annuaire span.content-fiche {
-  display: none;
+  /* display: none;  TODOOOOO*/
 }
-
+.page-annuaire-alphabetique a.button.js-form-submit.form-submit {
+  margin-top: 16px;
+}
 
 body .dialog-off-canvas-main-canvas .layout-container .grid-container.pre-footer1 .grid-container.medium {
   padding-left: 55px;
@@ -287,14 +289,14 @@ Vignettes des Documents (Media) alignées avec le name
    max-height: 280px;
    
  }
- .section-annuaire .views-element-container {
+ [class^="page-annuaire-details"] .views-element-container {
    max-width: 560px;
  }
  
- .section-annuaire .views-element-container {
+ [class^="page-annuaire-details"] .views-element-container {
    width: 560px;
    padding-bottom: 25px;
- }
+ } 
  #block-alphabetfilterviewblock {
        margin-left: 9%;
  }

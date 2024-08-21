@@ -6,6 +6,57 @@
 
       $(document).ready(function() {
 
+
+
+
+        $(window).on('load', function() {
+        
+          jQuery(jQuery('.is-front .paragraph.paragraph--type--lien.paragraph--view-mode--default img')[0]).on('click', function() {
+            jQuery('.is-front .paragraph--type--lien .lien__lien .l2 a')[0].click();
+         });
+         jQuery(jQuery('.is-front .paragraph.paragraph--type--lien.paragraph--view-mode--default img')[1]).on('click', function() {
+            jQuery('.is-front .paragraph--type--lien .lien__lien .l2 a')[1].click();
+         });
+         jQuery(jQuery('.is-front .paragraph.paragraph--type--lien.paragraph--view-mode--default img')[2]).on('click', function() {
+            jQuery('.is-front .paragraph--type--lien .lien__lien .l2 a')[2].click();
+         });
+         
+         jQuery(jQuery('.is-front .paragraph.paragraph--type--lien.paragraph--view-mode--default img')[3]).on('click', function() {
+            jQuery('.is-front .paragraph--type--lien .lien__lien .l2 a')[3].click();
+         });
+         
+         jQuery(jQuery('.is-front .paragraph.paragraph--type--lien.paragraph--view-mode--default img')[4]).on('click', function() {
+            jQuery('.is-front .paragraph--type--lien .lien__lien .l2 a')[4].click();
+         });
+         
+         
+         jQuery(jQuery('.is-front .paragraph.paragraph--type--lien.paragraph--view-mode--default img')[5]).on('click', function() {
+            jQuery('.is-front .paragraph--type--lien .lien__lien .l2 a')[5].click();
+         });
+         
+         jQuery(jQuery('.is-front .paragraph.paragraph--type--lien.paragraph--view-mode--default img')[6]).on('click', function() {
+            jQuery('.is-front .paragraph--type--lien .lien__lien .l2 a')[6].click();
+         });
+         
+         jQuery(jQuery('.is-front .paragraph.paragraph--type--lien.paragraph--view-mode--default img')[7]).on('click', function() {
+            jQuery('.is-front .paragraph--type--lien .lien__lien .l2 a')[7].click();
+         });
+
+
+
+        if(jQuery(window).width() < 600) {
+          jQuery('#block-backbuttonblock').insertAfter('#block-views-block-publicite-publicite-guide-en-hauteur');
+        }
+
+
+        });
+
+
+
+
+
+
+
         if (location.href.indexOf('annuaire') > 0) {
           document.title = 'Annuaire DLR - matériels de chantier - distribution, location, réparation';
         }

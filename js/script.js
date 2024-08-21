@@ -147,10 +147,34 @@
         return $(this).text() == brandLabel;
       }).prop('selected', true);
     }
+    
+    var optionValuete = jQuery('.kiiiiiiiiii').val();
 
+    
+          jQuery('.marque-nom-copy').on('change', function () {
+            let nomcopy = jQuery(this).val();
+        
+        
+                 // Label to search for
+                    var targetLabel = nomcopy;
+        
+                    // Find the <select> element
+                    var selectElement = jQuery('.kiiiiiiiiii');
+        
+                    // Find the <option> element with the label "AFM" and get its value
+                    optionValuete = selectElement.find('option').filter(function() {
+                        return jQuery(this).text().trim() === targetLabel;
+                    }).val();
+                    console.log(optionValuete, ' change')
+        
+        })
     $('.filter-by-brand').once('leaflet').on('click', function(){
       let brandValue = $('.marque-nom-copy').val();
       let last_materiel_occ = $('[name="materiel_occasion"]').val();
+
+
+
+
 
 
       if (last_materiel_occ != 'All') {
@@ -162,20 +186,51 @@
           let matchedUrl = queryString.match(/materiel_occasion=[0-9]+/);
           if (matchedUrl) {//si déjà filtré par materiel occasion
             let newHref = queryString.replace(matchedUrl[0], 'materiel_occasion=' + last_materiel_occ);
+
+            newHref = removeUrlParameter(window.location.href, "marque_nom"); //TDODO
+            console.log(newHref, last_materiel_occ, ' here', brandValue);
             return location.href = newHref;
           }
           return location.href = window.location.href + '&materiel_occasion=' + last_materiel_occ;
         }
+        
+        //check if therei 
+        let matchedUrl = queryString.match(/materiel_occasion=[0-9]+/);
+          if (matchedUrl) {//si déjà filtré par materiel occasion
+            let newHref = queryString.replace(matchedUrl[0], 'materiel_occasion=' + last_materiel_occ);
+
+            // newHref = replaceMarqueNom(newHref, "");
+            console.log(newHref, last_materiel_occ, ' here', brandValue); 
+
+
+            if (window.location.search.includes('marque_nom')) {
+                var regexNome = /(\bmarque_nom=)\d+/;
+                let newqueryString =  queryString.replace(regexNome, '$1' + optionValuete);
+                console.log(newqueryString, ' k', optionValuete)
+                // return;
+                return location.href = newqueryString;
+            }else {
+              return location.href = newHref;
+            }
+
+          }
+        
+        return location.href = window.location.href + '&materiel_occasion=' + last_materiel_occ;
 
       }else {//tout Domaines de matériels d'occasion
         if (!brandValue) {
           let currentUrl = window.location.href;
           let cleanUrl = currentUrl.replace(/[&?]marque_nom=[0-9]+/, '');
+          console.log(currentUrl, cleanUrl, ' url')
           return location.href = cleanUrl
         }else {
           let currentUrl = window.location.href;
           let cleanUrl = currentUrl.replace(/[&?]materiel_occasion=[0-9]+/, '');
-          return location.href = cleanUrl
+          cleanUrl = replaceSubstring(cleanUrl, '&marque_nom', '?marque_nom');
+          // continue;//todo
+          if (queryString) {
+            return location.href = cleanUrl
+          }
         }
       }
 
@@ -187,7 +242,6 @@
           data: {idMarque: brandValue, id:$('.marque-nom-copy').val()},
           success: (successResult, val, ee) => {
           if (successResult != 'none') {
-            //check if url already filter by occas materiel
             if (!queryString) {
               location.href = '?marque_nom=' + successResult['id'];
             }else {
@@ -319,7 +373,47 @@
         $('.filter_by_name').val(lastValue)
       }
     }
+     // Function to replace '&marque_nom' with 'marque_nom'
+     function replaceSubstring(url, oldSubstring, newSubstring) {
+      // Use a regular expression to replace the old substring with the new one
+      var updatedUrl = url.replace(new RegExp(oldSubstring, 'g'), newSubstring);
+      return updatedUrl;
+  }
 
+  // Fonction pour supprimer un paramètre d'URL
+  function removeUrlParameter(url, parameter) {
+    // Créer un objet URL à partir de l'URL
+    var urlObj = new URL(url);
+    // Obtenir les paramètres de l'URL
+    var params = new URLSearchParams(urlObj.search);
+    // Supprimer le paramètre spécifié
+    params.delete(parameter);
+    // Reconstruire l'URL sans le paramètre
+    urlObj.search = params.toString();
+    return urlObj.toString();
+}
+
+    function replaceMarqueNom(queryString, newMarqueNom) {
+      // Regular expression to find 'marque_nom' parameter with optional '&'
+      var regex = /([&?])marque_nom=\d+/;
+
+      // Replace 'marque_nom=number' with 'marque_nom=newMarqueNom'
+      var updatedQueryString = queryString.replace(regex, '$1marque_nom=' + newMarqueNom);
+
+      // If 'marque_nom' was the only parameter or at the end, handle that case
+      if (updatedQueryString.endsWith('&marque_nom=' + newMarqueNom)) {
+          updatedQueryString = updatedQueryString.slice(0, -('&marque_nom=' + newMarqueNom).length);
+      } else if (updatedQueryString.endsWith('?marque_nom=' + newMarqueNom)) {
+          updatedQueryString = updatedQueryString.slice(0, -('?marque_nom=' + newMarqueNom).length) + '?';
+      }
+
+      // If there is no '?' left in the string, append one
+      if (updatedQueryString[0] !== '?') {
+          updatedQueryString = '?' + updatedQueryString;
+      }
+
+      return updatedQueryString;
+  }
     function add_default_value_to_field_filter_by_company (matches) {
       let organizationNameVal =  matches[0].split('=');
           let lastValue =  organizationNameVal[1].substring(0, organizationNameVal[1].length - 1);

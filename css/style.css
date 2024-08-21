@@ -33,6 +33,21 @@ body .dialog-off-canvas-main-canvas .layout-container .grid-container.pre-footer
   padding-right: 38px;
 
 }
+.page-annuaire-occasion a.button.filter-by-brand, .page-annuaire-occasion a.button.filter-by-brand + a {
+  margin-top: 10px;
+}
+.page-annuaire-reparation  .js-form-submit.form-submit {
+  margin-top: 10px;
+}
+body.page-annuaire-table-liste-géographique .custom-reset-btn {
+  margin-top: 16px;
+}
+body.page-annuaire-location.section-annuaire .custom-reset-btn {
+  margin-top: 16px;
+}
+.page-annuaire-grues_a_tour a.button.js-form-submit.form-submit {
+  margin-top: 16px;
+}
 /*CSS Custom File de Makoa pour CiviCRM
  *
  * Raison d'etre : Améliorer l'affichage des pages profils publiques de CiviCRM

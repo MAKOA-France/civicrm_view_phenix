@@ -44,11 +44,62 @@
 
 
 
-        if(jQuery(window).width() < 600) {
-          jQuery('#block-backbuttonblock').insertAfter('#block-views-block-publicite-publicite-guide-en-hauteur');
-        }
+          if(jQuery(window).width() < 600) {
+            jQuery('#block-backbuttonblock').insertAfter('#block-views-block-publicite-publicite-guide-en-hauteur');
+          }
 
 
+          //customize title
+          let titleD = " - Annuaire DLR - matériels de chantier - distribution, location, réparation";
+          let matOcas = jQuery('[name="materiel_occasion"]').val();
+          if (matOcas != 'All') {
+            let selectedMater = jQuery('[name="materiel_occasion"] option:selected').text();console.log('value  a ' + selectedMater)
+            // jQuery('title').text(selectedMater + ' - Annuaire DLR - matériels de chantier - distribution, location, réparation');
+          }
+
+          if ($('.page-annuaire-alphabetique').length) {
+            jQuery('title').text('Alphabétique ' + titleD);
+          }
+          if ($('.page-annuaire-table-liste-géographique').length) {
+            jQuery('title').text('Carte géographique ' + titleD);
+          }
+          if ($('.page-annuaire-occasion').length) {
+            jQuery('title').text('Vente ' + titleD);
+            let matOcas = jQuery('[name="materiel_occasion"]').val();
+            
+            if (matOcas != 'All') {
+              let selectedMater = jQuery('[name="materiel_occasion"] option:selected').text();
+              jQuery('title').text(jQuery('[name="materiel_occasion"] option:selected').text() + ' ' + titleD);
+            }
+
+            let marq = jQuery('.marque-nom-copy').val();
+            if (marq != '') {
+              jQuery('title').text(jQuery('.marque-nom-copy').val() + ' ' + titleD);
+            }
+          }
+          
+          
+
+          if ($('.page-annuaire-location').length) {
+            jQuery('title').text(' Location ' + titleD);
+            let subfamily = jQuery('.chosen-single span').text();
+            if (subfamily != '- Tout -') {
+              jQuery('title').text(subfamily + ' ' + titleD);
+            }
+            
+            let actitesearch = jQuery('.bef-link--selected').text();
+            if (actitesearch != '- Tout -') {
+              if (subfamily == '- Tout -') {
+                jQuery('title').text(actitesearch + ' ' + titleD);
+              }
+            }
+          }
+
+          if ($('.page-annuaire-grues_a_tour').length) {
+            $('.page-annuaire-grues_a_tour .form-checkbox[value="1"]')
+          }
+
+           
         });
 
 
@@ -57,9 +108,9 @@
 
 
 
-        if (location.href.indexOf('annuaire') > 0) {
-          document.title = 'Annuaire DLR - matériels de chantier - distribution, location, réparation';
-        }
+        // if (location.href.indexOf('annuaire') > 0) {
+        //   document.title = 'Annuaire DLR - matériels de chantier - distribution, location, réparation';
+        // }
 
         jQuery('.paragraph.paragraph--type--lien.paragraph--view-mode--default').first().on('click', function() {
           let url = $('.link-market-place').attr('href');
@@ -199,7 +250,7 @@
       }).prop('selected', true);
     }
     
-    var optionValuete = jQuery('.kiiiiiiiiii').val();
+    var optionValuete = jQuery('.marquenomtes').val();
 
     
           jQuery('.marque-nom-copy').on('change', function () {
@@ -210,7 +261,7 @@
                     var targetLabel = nomcopy;
         
                     // Find the <select> element
-                    var selectElement = jQuery('.kiiiiiiiiii');
+                    var selectElement = jQuery('.marquenomtes');
         
                     // Find the <option> element with the label "AFM" and get its value
                     optionValuete = selectElement.find('option').filter(function() {
@@ -236,10 +287,9 @@
 
           let matchedUrl = queryString.match(/materiel_occasion=[0-9]+/);
           if (matchedUrl) {//si déjà filtré par materiel occasion
-            let newHref = queryString.replace(matchedUrl[0], 'materiel_occasion=' + last_materiel_occ);
+            let newHref = removeUrlParameter(window.location.href, "marque_nom"); //TDODO
+            newHref = queryString.replace(matchedUrl[0], 'materiel_occasion=' + last_materiel_occ);
 
-            newHref = removeUrlParameter(window.location.href, "marque_nom"); //TDODO
-            console.log(newHref, last_materiel_occ, ' here', brandValue);
             return location.href = newHref;
           }
           return location.href = window.location.href + '&materiel_occasion=' + last_materiel_occ;
@@ -258,10 +308,16 @@
                 var regexNome = /(\bmarque_nom=)\d+/;
                 let newqueryString =  queryString.replace(regexNome, '$1' + optionValuete);
                 console.log(newqueryString, ' k', optionValuete)
-                // return;
+                return;
                 return location.href = newqueryString;
             }else {
-              return location.href = newHref;
+              if (!brandValue) {
+                console.log(optionValuete,  ' erhe', jQuery('.marquenomtes').val());
+                return location.href = newHref;
+              }else {
+                console.log(optionValuete,  ' erhe', jQuery('.marquenomtes').val());
+                return location.href = newHref + '&marque_nom=' + optionValuete;
+              }
             }
 
           }

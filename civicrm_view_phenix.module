@@ -1172,7 +1172,7 @@ function civicrm_view_phenix_preprocess_pager(&$variables) {
 
   if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--page-2') {
     //do something here
-    $form['marque_nom']['#attributes']['class'][] = 'hide';
+    $form['marque_nom']['#attributes']['class'][] = 'hide kiiiiiiiiii';
   }
 if ($form['#id'] == 'views-exposed-form-location-occasion-membres-associes--liste-carte') {
 

@@ -132,9 +132,7 @@ class ViewService {
       }
 
 
-      $client_ip = $_SERVER['REMOTE_ADDR'];
 
-      if ($client_ip === '102.17.181.251') {
         // Regex pattern to find and replace page parameter
         $pattern = '/([?&])page=\d+/';
 
@@ -152,7 +150,6 @@ class ViewService {
           $url .= (strpos($url, '?') === false ? '?page=0' : '&page=0');
         }
         
-      }
 
 
 

@@ -152,7 +152,9 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
     }
   }
 
-  //Page geographique
+  /*  Modification de la vue page géographique, pour ajouter les icones
+   *  Et ajout du bon lien 
+   */
   if ($view->storage->id() == 'location_occasion_membres_associes_' && $view->current_display == 'liste_carte') {
     if ($field->field == 'organization_name' || $field->field == 'legal_name' ) {
       $current_company_id = $variables['row']->id;
@@ -1500,14 +1502,15 @@ function civicrm_view_phenix_views_pre_view(Drupal\views\ViewExecutable $view, $
     // redirection si quelqu'un tente de modifier à la main le token au niveau de l'url
     $get_token = \Drupal::request()->query->get('token');
     $decrypted_token = $custom_service->decryptString($get_token);
+
     if (!$decrypted_token) {
       $custom_service->redirectHomePage();
     }
 
-    $view->args[0] = $contact_id;//TODO HINT
+    $view->args[0] = $contact_id;
     $isAnnuaire = $db->query('select * from civicrm_value_phx_org_annuaireenligne where entity_id = ' . $contact_id)->fetch()->org_annuaireenligne_DLR;
     $token_get = \Drupal::request()->get('token');
-    $descripted_token = $custom_service->decryptString('32f0c8a4aae9d7fdf791556e14aa4c07152f274df9945e6a6c4b5f98adbfffd88cf6');//todo hint
+    $descripted_token = $custom_service->decryptString('32f0c8a4aae9d7fdf791556e14aa4c07152f274df9945e6a6c4b5f98adbfffd88cf6');
 
     if (!$isAnnuaire) {
       // throw new Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
@@ -1553,7 +1556,8 @@ function civicrm_view_phenix_views_pre_view(Drupal\views\ViewExecutable $view, $
 
 
 /**
- * create ul li to be appended to the filter (search by type of activity)
+ * creation des ul li pour etre ajouté au filtre
+ * (search by type of activity)
  */
 function build_ul_to_append_in_filter_toggle($ul_child, $id, $whiteslist, &$allUl) {
   $each_ul = '<ul class="toggle-sub-materiel">';
@@ -1620,9 +1624,9 @@ function civicrm_view_phenix_node_access(NodeInterface $node, $op, AccountInterf
   // les rubriques de l'annuaire DLR qui doivent etre accessibles aux visiteurs anonymes ?
   //Parmis les node de type "page de base" il y a ce qui sont privé et public, donc pour ces nodes là sont publics
   // Add the node IDs here.
-  // TODO 3/8/24 : Sitraka POURQUOI CES NODES ET PAS D'AUTRES ? SONT ILS CEUX DE LA PROD OU CEUX DU DEV ? MERCI D'EXPLIQUER !
-  //todo lister les nodes avec leur nom ou title
-  //par exemple le node/611 = /annuaire (la homepage)
+  // liste  des nodes avec leur nom ou title
+  //par exemple le node/611 = /annuaire (la homepage) , node/607 ==> ARGUS CHARIOTS 2 horizontal
+  //node/407 ==> plan d'acces, node/408 => politique de confidentialité
   $allowed_node_ids = [611, 607, 131, 409, 407, 408];
 
   if ($account->isAnonymous()) {
@@ -1643,8 +1647,8 @@ function civicrm_view_phenix_node_access(NodeInterface $node, $op, AccountInterf
 
 /**
  * Implements hook_taxonomy_term_access().
- * Si c'est un utilisateur anonyme et que c'est la page des taxonomies on redirige vers la page d'accueil
- * TODO : Sitraka : C'est quoi ? à quoi ca sert ? à l'annuaire ou à l'extranet ou autre chose ??? IL FAUT LIMITER AU CONTEXTE OU C'EST UTILE ANNUAIRE ? EXTRANET ? BACK OFFICE ? CIVI ?
+ * Pour la page annuaire Si c'est un utilisateur anonyme et que c'est la page des taxonomies on redirige vers la page d'accueil
+ * 
  */
 function civicrm_view_phenix_taxonomy_term_access(TermInterface $term, $operation, AccountInterface $account) {
   // Si l'utilisateur est anonyme
@@ -1667,6 +1671,8 @@ function civicrm_view_phenix_taxonomy_term_access(TermInterface $term, $operatio
 
 /**
  * Implements hook_form_alter().
+ * ça sert à mettre par default les nodes de type publicité à www_annuairedlr_fr
+ * et à modifier aussi le label du bouton envoyer de la page reinitialisation du mot de passe 
  */
 function civicrm_view_phenix_form_alter (&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
   if ($form['#id'] == 'user-pass') {

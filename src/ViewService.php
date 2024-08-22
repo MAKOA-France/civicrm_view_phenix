@@ -94,7 +94,6 @@ class ViewService {
       $is_active = (($get_number !== false) && ($get_number == '009')) ? 'active-letter' : ' ';
 
 
-      //TODO REMPLACER LE & (par ex && ou &&& ou plus) qui revient plusieurs fois dans l'url par un seul & :
       if (preg_match('/&{2,}/', $url)) {
         $url = preg_replace('/&+/', '&', $url);
       }
@@ -450,7 +449,7 @@ class ViewService {
 
   /**
    * Redirect to the homepage (utilisé pour les pages de l'ANNUAIRE DLR)
-   * TODO SITRAKA : dans quels cas est-ce utilisé ? faire attention à limiter au contexte utile annuaire extranet civicrm admin ? <front> marche pour extranet.dlr.fr/bienvenue ? pour www.annuairedlr.fr/annuaire ?
+   * seulement ppour l'annuaire si l'url contient "/annuaire" et que le domain est "www.annuairedlr.fr"
    */
 public function redirectHomePage() {
   // Récupérer l'URL courante
@@ -459,7 +458,6 @@ public function redirectHomePage() {
   // Récupérer le domaine courant
   $current_domain = \Drupal::request()->getHost();
 
-  // Vérifier si l'URL contient '/annuaire' et si le domaine est 'www.annuairedlr.fr'
   if (strpos($current_url, '/annuaire') !== false && $current_domain == 'www.annuairedlr.fr') {
     $response = new \Symfony\Component\HttpFoundation\RedirectResponse(\Drupal\Core\Url::fromRoute('<front>')->toString());
     return $response->send();

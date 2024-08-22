@@ -10,6 +10,30 @@
 
 
         $(window).on('load', function() {
+
+
+
+
+          var url = window.location.href 
+
+          if (url.includes('verifie-agence')) {
+
+            // Extract the fragment part
+            var fragment = url.split('#')[1] || '';
+            
+            // Convert the fragment into a query string object
+            var queryString = fragment.split('?')[1] || '';
+            var params = new URLSearchParams(queryString);
+            
+            // Get the 'id' parameter
+            var id = params.get('id');
+            
+            // Output the result
+            console.log('ID parameterqq:', id); 
+            $('.id_contact_hidden').val(id)
+          }
+
+
         
           jQuery(jQuery('.is-front .paragraph.paragraph--type--lien.paragraph--view-mode--default img')[0]).on('click', function() {
             jQuery('.is-front .paragraph--type--lien .lien__lien .l2 a')[0].click();
@@ -443,10 +467,7 @@
 
       if (window.location.search.indexOf('materiel_location') > 0) {
 
-        //show default selected materiel
-        //todo here jQuery('ul').has('li[data-val=' + window.location.search.split('materiel_location=')[1] + ']').show();
-        //stylized selected filter
-        //jQuery('li a[href="' + window.location.search +'"]').css({'textDecoration' : 'underline', 'fontWeight': 'bold'});
+       
       }
     }
 
@@ -611,7 +632,6 @@
 
           else {
             // If we already had a map instance, add new features.
-            // @TODO Does this work? Needs testing.
             if (data.features !== undefined) {
               $container.data('leaflet').add_features(mapid, data.features);
             }

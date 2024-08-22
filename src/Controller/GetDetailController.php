@@ -137,20 +137,23 @@ class GetDetailController
       }
 
     }else {
-        $getId = \Drupal::request()->get('get_id');
-        preg_match('/marque_nom=[0-9]+/i', \Drupal::request()->server->get('HTTP_REFERER'), $output_array);
-        if ($getId) {
-          $query = $database->query("SELECT * FROM civicrm_option_value where value = '" . $getId . "'");
-          $result = $query->fetch();
-          if($result) {
-              $label = $result->label;
-              // TODO Sitraka ce serait pas ici qu'on ajoute au label des parametres de façon récursive et que ca poserait probleme ???
-              //exemple : /annuaire/location?-9materiel_location_new=8-9materiel_location_new%3D2-9=materiel_location_new=11&-9&&&&letter=U
-              return new Response($label);
-          }
-
+        
+      $getId = \Drupal::request()->get('get_id');
+      preg_match('/marque_nom=[0-9]+/i', \Drupal::request()->server->get('HTTP_REFERER'), $output_array);
+      
+      if ($getId) {
+        
+        $query = $database->query("SELECT * FROM civicrm_option_value where value = '" . $getId . "'");
+        
+        $result = $query->fetch();
+        
+        if($result) {
+            $label = $result->label;
+            return new Response($label);
         }
+
       }
+    }
 
     return new Response (2);
 

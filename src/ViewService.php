@@ -130,6 +130,32 @@ class ViewService {
       if (preg_match('/&{2,}/', $url)) {
         $url = preg_replace('/&+/', '&', $url);
       }
+
+
+      $client_ip = $_SERVER['REMOTE_ADDR'];
+
+      if ($client_ip === '102.17.181.251') {
+        // Regex pattern to find and replace page parameter
+        $pattern = '/([?&])page=\d+/';
+
+        // Replacement string with the new value for page parameter
+        $replacement = '$1page=0';
+
+        // Perform the replacement
+        $url = preg_replace($pattern, $replacement, $url);
+
+        // Ensure that if `page` was the only parameter or if it is at the end, no extra `&` is left
+        $url = preg_replace('/(&page=0&|&page=0$|\?page=0&|\?page=0$)/', '$1', $url);
+
+        // If `page` parameter was not present, append it
+        if (strpos($url, 'page=') === false) {
+          $url .= (strpos($url, '?') === false ? '?page=0' : '&page=0');
+        }
+        
+      }
+
+
+
        $generate_html .= '<span>
         <a data-active-letter="' .$is_active . '" data-current-uri="' . $current_uri . '" href="' . $url . '" class="filter-by-letter is-active">' . $letter . '</a>
       </span>';

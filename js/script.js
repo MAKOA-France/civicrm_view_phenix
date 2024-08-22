@@ -33,7 +33,6 @@
             $('.id_contact_hidden').val(id)
           }
 
-
         
           jQuery(jQuery('.is-front .paragraph.paragraph--type--lien.paragraph--view-mode--default img')[0]).on('click', function() {
             jQuery('.is-front .paragraph--type--lien .lien__lien .l2 a')[0].click();
@@ -75,9 +74,19 @@
 
           //customize title
           let titleD = " - Annuaire DLR - matériels de chantier - distribution, location, réparation";
+
+
+
+
+          if ($('.page-annuaire').length) {
+            $('title').text('Annuaire DLR - matériels de chantier - distribution, location, réparation')
+          }
+
+
+
           let matOcas = jQuery('[name="materiel_occasion"]').val();
           if (matOcas != 'All') {
-            let selectedMater = jQuery('[name="materiel_occasion"] option:selected').text();console.log('value  a ' + selectedMater)
+            let selectedMater = jQuery('[name="materiel_occasion"] option:selected').text();
             // jQuery('title').text(selectedMater + ' - Annuaire DLR - matériels de chantier - distribution, location, réparation');
           }
 

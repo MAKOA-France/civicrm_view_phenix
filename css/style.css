@@ -40,13 +40,13 @@ body .dialog-off-canvas-main-canvas .layout-container .grid-container.pre-footer
   margin-top: 10px;
 }
 body.page-annuaire-table-liste-géographique .custom-reset-btn {
-  margin-top: 16px;
+  /* margin-top: 16px; */
 }
 body.page-annuaire-location.section-annuaire .custom-reset-btn {
-  margin-top: 16px;
+  /* margin-top: 16px; */
 }
 .page-annuaire-grues_a_tour a.button.js-form-submit.form-submit {
-  margin-top: 16px;
+  /* margin-top: 16px; */
 }
 /*CSS Custom File de Makoa pour CiviCRM
  *
@@ -379,7 +379,7 @@ span.content-fiche .svg-inline--fa.fa-link.icon-link {
   display: none;
 } 
 .section-annuaire .custom-reset-btn.button {
-margin-right: 6px;
+/* margin-right: 6px; */
 }
 
 .section-annuaire ul.toggle-sub-materiel li {

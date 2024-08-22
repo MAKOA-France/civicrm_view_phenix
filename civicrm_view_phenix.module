@@ -431,6 +431,14 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
     $hasLatitudeAndLongitude = $custom_service->checkIfCompanyHasLatAndLongitude($curr_id);//don't display map if there is no marker
     $view['#attributes']['class'][] = 'custom-view-embeded-map';
     $view['#attributes']['class'][] = $custom_class;
+
+    $view['#cache'] = [
+      'contexts' => ['url', 'user'], // Set contexts based on what affects the view
+      'tags' => ['view:entreprise_localisation'], // Use appropriate cache tags
+      'max-age' => 3600, // Set the max age (in seconds)
+    ];
+
+
     $view_rendered = $hasLatitudeAndLongitude ? \Drupal::service('renderer')->render($view) : '';
     $add_or_edit = $current_output ? 'Modifier la vidéo' : 'Ajouter une video';
     $checksum = $custom_service->getChecksumById($curr_id);
@@ -457,6 +465,10 @@ function civicrm_view_phenix_preprocess_views_view_field(&$variables) {
       '#template' => '{{ yourvar }} {{ yourhtml | raw }}',
       '#context' => [
         'yourhtml' => $bnt_add_video . '<div class="cvideo">' . $current_output  . '</div><div class="cmap">' .  $view_rendered . '</div>',
+      ],
+      '#cache' => [
+        'tags' => ['my_custom_tag'], // Add relevant cache tags
+        'max-age' => 3600, // Set the max age for caching (1 hour in this example)
       ],
     ];
       $variables['output'] =$markup;

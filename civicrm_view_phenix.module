@@ -917,7 +917,7 @@ function civicrm_view_phenix_views_query_alter(\Drupal\views\ViewExecutable $vie
               $custom_service->addWhereQuery ($query,  $custom_letter . '%', 'civicrm_contact', 'organization_name', 'not like');
             }
           }else {
-            $custom_service->addWhereQuery ($query,  $letter_alphabet . '%', 'civicrm_contact', 'organization_name', 'like');
+            $custom_service->addWhereQuery ($query,  $letter_alphabet . '%', 'civicrm_contact', 'legal_name', 'like');
           }
         }
 

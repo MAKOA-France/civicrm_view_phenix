@@ -102,7 +102,7 @@ class CompanyProfileSecondProfile  extends BlockBase  {
       }
       
 
-      //todo  hook theme (create template twig)
+      //amélioration du html, plutot utiliser un  hook theme (create template twig)
 
 
       $htmlUsedEquipments = '<div class="field-content occasion-details content-fiche"><ul>';

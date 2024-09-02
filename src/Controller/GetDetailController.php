@@ -64,7 +64,7 @@ class GetDetailController
         }
 
         $crypted_id = $custom_service->encryptString($id);
-        if ($allInfoAboutCompany) {//Todo hint
+        if ($allInfoAboutCompany) {//page detail 
 
           $build .= '<div class="tooltip-map" id="' . $id . '-tooltip">
           <ul style="list-style-type: none;  ">

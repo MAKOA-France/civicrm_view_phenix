@@ -897,7 +897,7 @@ public function getWebsiteApiV4ById($contactId) {
       $urlMarket = $urlGeneratorMarket($email);
       // Décoder les caractères spéciaux de l'URL
       $urlMarket = urldecode($urlMarket);
-      //TODO dans le futur  les appels devront être effectuer sur le nom de domaine https://achats.dlr.fr/$urlMarket
+      //Achat quantis ==> dans le futur  les appels devront être effectuer sur le nom de domaine https://achats.dlr.fr/$urlMarket
       // $build['#suffix'] = '<a href="https://qantis.co' . $urlPlateform . '">lien connexion</a>';
       $response = file_get_contents(self::QANTIS_DOMAIN . $urlMarket);
       if ($response) {

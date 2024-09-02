@@ -367,7 +367,7 @@
           let currentUrl = window.location.href;
           let cleanUrl = currentUrl.replace(/[&?]materiel_occasion=[0-9]+/, '');
           cleanUrl = replaceSubstring(cleanUrl, '&marque_nom', '?marque_nom');
-          // continue;//todo
+          
           if (queryString) {
             return location.href = cleanUrl
           }
@@ -983,9 +983,9 @@
       ficheEntreprise.lng = $('.views-field-url').attr('data-longitude')
       // Set the map start zoom and center.
       if ($('.views-field-url').attr('data-total-result') > 2) {
-        Drupal.Leaflet[mapid].lMap.setView(ficheEntreprise, 5,5);  //todo center on france
+        Drupal.Leaflet[mapid].lMap.setView(ficheEntreprise, 5,5);  //permet de centrer sur la france
       }else {
-       // Drupal.Leaflet[mapid].lMap.setView(ficheEntreprise, 7.6);  //todo center on france
+       // Drupal.Leaflet[mapid].lMap.setView(ficheEntreprise, 7.6);  //permet de centrer sur la france
       }
      }
 

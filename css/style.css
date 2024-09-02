@@ -22,7 +22,7 @@
 }
 
 .section-annuaire span.content-fiche {
-  /* display: none;  TODOOOOO*/
+  /* display: none;  */
 }
 .page-annuaire-alphabetique a.button.js-form-submit.form-submit {
   /* margin-top: 16px; */
@@ -629,7 +629,7 @@ input  {
 /******  vue guide  ******/
 .section-annuaire thead th,
 .section-annuaire tbody td,
-a{
+.section-annuaire a{
     font-size: 12px;
 }
 
@@ -640,7 +640,7 @@ a{
 .section-annuaire table.cols-5 tr {
     border: 1px solid #e7d8d8;
 }
-.section-annuaire #block-b-zf-content > div > div > table > tbody > tr > td a, .top-bar li a {
+.section-annuaire #block-b-zf-content > div > div > table > tbody > tr > td a, .section-annuaire  .top-bar li a {
     font-weight: bold;
 }
 

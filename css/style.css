@@ -629,8 +629,11 @@ input  {
 /******  vue guide  ******/
 .section-annuaire thead th,
 .section-annuaire tbody td,
-.section-annuaire a{
+.section-annuaire table a{
     font-size: 12px;
+}
+.section-annuaire .js-form-item.form-item.js-form-type-select.form-item-materiel-location-new.js-form-item-materiel-location-new .bef-link {
+  font-size: 12px;
 }
 
 .section-annuaire table tbody tr {

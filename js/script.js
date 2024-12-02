@@ -12,7 +12,12 @@
         $(window).on('load', function() {
 
 
-
+         /*  $('.paragraph.paragraph--type--lien.paragraph--view-mode--default img').each(function() {
+            var link = $(this).data('url'); // Example: data-url="https://example.com"
+            if(! $('.toone').length) {
+              // $(this).wrap('<a class="toone" target="_blank" href="/economiegestion/service-achats-dlr-reserve-aux-adherents"></a>');
+            }
+        }); */
 
           var url = window.location.href 
 
@@ -34,7 +39,7 @@
           }
 
         
-          jQuery(jQuery('.is-front .paragraph.paragraph--type--lien.paragraph--view-mode--default img')[0]).on('click', function() {
+          /* jQuery(jQuery('.is-front .paragraph.paragraph--type--lien.paragraph--view-mode--default img')[0]).on('click', function() {
             jQuery('.is-front .paragraph--type--lien .lien__lien .l2 a')[0].click();
          });
          jQuery(jQuery('.is-front .paragraph.paragraph--type--lien.paragraph--view-mode--default img')[1]).on('click', function() {
@@ -63,7 +68,7 @@
          
          jQuery(jQuery('.is-front .paragraph.paragraph--type--lien.paragraph--view-mode--default img')[7]).on('click', function() {
             jQuery('.is-front .paragraph--type--lien .lien__lien .l2 a')[7].click();
-         });
+         }); */
 
 
 

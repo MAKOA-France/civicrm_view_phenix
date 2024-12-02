@@ -192,6 +192,18 @@ width:100%;
 }
 
 
+
+
+.cus-each_link [data-once="quickedit"] {
+  color: black;
+}
+
+.cus-each_link + a {
+  display:none;
+}
+
+
+
 /* MOSAICO   */
 
 /* marge menu  */

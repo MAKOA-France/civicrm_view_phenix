@@ -1763,3 +1763,24 @@ function civicrm_view_phenix_outbound_alter(&$path, &$options, $original_path) {
     }
   }
 }
+
+
+/**
+ * Implements hook_preprocess_block().
+ */
+function civicrm_view_phenix_preprocess_block(&$variables) {
+  if ($variables['derivative_plugin_id'] == 'a662a6e5-2282-4ab8-a6e7-325d8c06e702') {
+
+    // $lien = $variables['content']['field_liens'][0]['#paragraph']->get('field_lien');
+    foreach ($variables['content']['field_liens'] as $k => $values) {
+      if (is_int($k) and $k > 0) {
+        $lien = $variables['content']['field_liens'][$k]['#paragraph']->get('field_lien');
+        if ($lien) {
+          $linkurl  = $lien->getValue()[0]['uri'];
+          $variables['content']['field_liens'][$k]['#prefix'] = '<a  target="_blank" class="cus-each_link" href="'.$linkurl.'">';
+          $variables['content']['field_liens'][$k]['#suffix'] = '</a>';
+        }
+      }
+    }
+  }
+}
